@@ -1,5 +1,6 @@
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
+using UnityEngine.Serialization;
 
 public class EnemySpawner : MonoBehaviour
 {
@@ -9,8 +10,10 @@ public class EnemySpawner : MonoBehaviour
 
     [Header("Spawn Settings")]
     public Transform player;
-    public float minSpawnDistance = 14f; // Чуть увеличил, чтобы точно за камерой
+    public float minSpawnDistance = 14f;
+    [FormerlySerializedAs("spawnDistance")]
     public float maxSpawnDistance = 18f;
+    [FormerlySerializedAs("spawnRate")]
     public float baseSpawnRate = 2.0f;
 
     [Header("Wave Info")]
@@ -19,16 +22,22 @@ public class EnemySpawner : MonoBehaviour
 
     void Awake()
     {
-        // Runtime-state must always start from a clean baseline,
-        // even if Unity preserves component values between play sessions.
+        if (player == null)
+        {
+            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+            if (playerObject != null)
+            {
+                player = playerObject.transform;
+            }
+        }
+
         currentWave = 0;
         isSpawning = false;
+        GameManager.ResetStats();
     }
 
     void Update()
     {
-        // Если врагов на сцене нет и спавн завершен — запускаем следующую волну
-        // Добавляем проверку currentWave == 0, чтобы первый запуск был четким
         if (!isSpawning && (currentWave == 0 || GameObject.FindGameObjectsWithTag("Enemy").Length == 0))
         {
             isSpawning = true;
@@ -38,41 +47,37 @@ public class EnemySpawner : MonoBehaviour
 
     IEnumerator StartNextWave()
     {
-        // isSpawning = true;
         currentWave++;
-        
-        // Количество обычных зомби
+        GameManager.ReportWave(currentWave);
+
         int enemiesToSpawn = currentWave * 5;
-        // Количество боссов (растет каждую волну)
-        int bossesToSpawn = currentWave; 
+        int bossesToSpawn = currentWave;
 
-        float currentSpawnRate = Mathf.Max(0.2f, baseSpawnRate - (currentWave * 0.15f));
+        float currentSpawnRate = Mathf.Max(0.2f, baseSpawnRate - (currentWave * 0.3f));
 
-        Debug.Log($"<color=cyan>=== НАЧАЛО ВОЛНЫ {currentWave} ===</color>");
-        Debug.Log($"План: {enemiesToSpawn} зомби и {bossesToSpawn} босс(ов). Интервал: {currentSpawnRate}с");
+        Debug.Log($"<color=cyan>=== WAVE {currentWave} STARTED ===</color>");
+        Debug.Log($"Plan: {enemiesToSpawn} zombies and {bossesToSpawn} boss(es). Interval: {currentSpawnRate}s");
 
         yield return new WaitForSeconds(2f);
 
-        // 1. Спавним обычных зомби
         for (int i = 1; i <= enemiesToSpawn; i++)
         {
-            SpawnEnemy(enemyPrefab, $"Зомби №{i}");
+            SpawnEnemy(enemyPrefab, $"Zombie #{i}");
             yield return new WaitForSeconds(currentSpawnRate);
         }
 
-        // 2. Спавним боссов (в конце волны)
         if (bossPrefab != null)
         {
             for (int j = 1; j <= bossesToSpawn; j++)
             {
-                Debug.Log($"<color=red>ВЫХОДИТ БОСС №{j}!</color>");
-                SpawnEnemy(bossPrefab, $"БОСС №{j}");
-                yield return new WaitForSeconds(1f); // Небольшая пауза между боссами
+                Debug.Log($"<color=red>BOSS #{j} ENTERS THE ARENA!</color>");
+                SpawnEnemy(bossPrefab, $"Boss #{j}");
+                yield return new WaitForSeconds(1f);
             }
         }
 
         isSpawning = false;
-        Debug.Log($"<color=orange>Все враги волны {currentWave} выпущены на арену!</color>");
+        Debug.Log($"<color=orange>All enemies from wave {currentWave} are now on the arena.</color>");
     }
 
     void SpawnEnemy(GameObject prefab, string logName)
@@ -81,10 +86,13 @@ public class EnemySpawner : MonoBehaviour
 
         Vector2 randomDir = Random.insideUnitCircle.normalized;
         float randomDist = Random.Range(minSpawnDistance, maxSpawnDistance);
-        Vector3 spawnPos = new Vector3(player.position.x + randomDir.x * randomDist, 
-                                       player.position.y + randomDir.y * randomDist, 0);
+        Vector3 spawnPos = new Vector3(
+            player.position.x + randomDir.x * randomDist,
+            player.position.y + randomDir.y * randomDist,
+            0f
+        );
 
         Instantiate(prefab, spawnPos, Quaternion.identity);
-        Debug.Log($"[Спавнер]: {logName} появился в мире.");
+        Debug.Log($"[Spawner]: {logName} spawned.");
     }
 }
