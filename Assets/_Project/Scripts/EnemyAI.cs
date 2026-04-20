@@ -67,6 +67,14 @@ public class EnemyAI : MonoBehaviour
         baseAttackRate = attackRate;
     }
 
+    private void OnEnable()
+    {
+        GameManager.ReportEnemySpawned();
+        isDead = false;
+        knockbackCounter = 0f;
+        dashTimer = 0f;
+    }
+
     private void Start()
     {
         ResolvePlayer();
@@ -130,6 +138,7 @@ public class EnemyAI : MonoBehaviour
     {
         currentArchetype = archetype;
         runtimeConfigured = true;
+        isDead = false;
 
         float waveScale = Mathf.Max(0, waveNumber - 1);
 
@@ -186,7 +195,7 @@ public class EnemyAI : MonoBehaviour
         {
             isDead = true;
             GameManager.ReportEnemyKilled(scoreValue);
-            Destroy(gameObject);
+            ObjectPoolManager.ReturnToPool(gameObject);
         }
     }
 
@@ -267,7 +276,7 @@ public class EnemyAI : MonoBehaviour
         for (int i = 0; i < summonsPerCycle; i++)
         {
             Vector2 offset = Random.insideUnitCircle * summonRadius;
-            GameObject spawnedMinion = Instantiate(summonPrefab, transform.position + (Vector3)offset, Quaternion.identity);
+            GameObject spawnedMinion = ObjectPoolManager.Spawn(summonPrefab, transform.position + (Vector3)offset, Quaternion.identity);
             EnemyAI minion = spawnedMinion.GetComponent<EnemyAI>();
             if (minion != null)
             {

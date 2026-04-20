@@ -270,7 +270,7 @@ public class WeaponController : MonoBehaviour
     private void SpawnProjectile(float spreadOffset)
     {
         Quaternion shotRotation = firePoint.rotation * Quaternion.Euler(0f, 0f, spreadOffset);
-        GameObject bulletObject = Instantiate(fallbackBulletPrefab, firePoint.position, shotRotation);
+        GameObject bulletObject = ObjectPoolManager.Spawn(fallbackBulletPrefab, firePoint.position, shotRotation);
 
         Bullet bullet = bulletObject.GetComponent<Bullet>();
         if (bullet != null)

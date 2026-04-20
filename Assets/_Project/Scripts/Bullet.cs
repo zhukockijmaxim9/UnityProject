@@ -13,6 +13,12 @@ public class Bullet : MonoBehaviour
     private float currentSpeed;
     private int currentDamage;
     private float currentKnockbackForce;
+    private float returnTimer;
+
+    private void OnEnable()
+    {
+        returnTimer = lifetime;
+    }
 
     private void Awake()
     {
@@ -25,7 +31,18 @@ public class Bullet : MonoBehaviour
     private void Start()
     {
         rb.linearVelocity = transform.right * currentSpeed;
-        Destroy(gameObject, lifetime);
+    }
+
+    private void Update()
+    {
+        if (returnTimer > 0f)
+        {
+            returnTimer -= Time.deltaTime;
+            if (returnTimer <= 0f)
+            {
+                ObjectPoolManager.ReturnToPool(gameObject);
+            }
+        }
     }
 
     public void Initialize(float newSpeed, int newDamage, float newKnockbackForce)
@@ -54,6 +71,6 @@ public class Bullet : MonoBehaviour
             enemy.ApplyKnockback((Vector2)transform.right * currentKnockbackForce);
         }
 
-        Destroy(gameObject);
+        ObjectPoolManager.ReturnToPool(gameObject);
     }
 }

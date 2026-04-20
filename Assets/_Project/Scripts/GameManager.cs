@@ -13,6 +13,7 @@ public class GameManager : MonoBehaviour
 
     private int currentWave;
     private int killCount;
+    private int aliveEnemies;
     private int score;
     private int currentHealth;
     private int maxHealth;
@@ -66,6 +67,16 @@ public class GameManager : MonoBehaviour
     public static void ReportWave(int waveNumber)
     {
         EnsureInstance().SetWave(waveNumber);
+    }
+
+    public static void ReportEnemySpawned()
+    {
+        EnsureInstance().aliveEnemies++;
+    }
+
+    public static int GetAliveEnemies()
+    {
+        return EnsureInstance().aliveEnemies;
     }
 
     public static void ReportEnemyKilled(int pointsAwarded)
@@ -145,6 +156,7 @@ public class GameManager : MonoBehaviour
     public void RegisterEnemyKilled(int pointsAwarded)
     {
         killCount++;
+        aliveEnemies = Mathf.Max(0, aliveEnemies - 1);
         score += pointsAwarded > 0 ? pointsAwarded : defaultPointsPerKill;
         RefreshHud();
     }
@@ -192,6 +204,7 @@ public class GameManager : MonoBehaviour
     {
         currentWave = 0;
         killCount = 0;
+        aliveEnemies = 0;
         score = 0;
         currentHealth = 0;
         maxHealth = 0;

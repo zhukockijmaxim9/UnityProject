@@ -74,7 +74,7 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
-        bool arenaIsClear = GameObject.FindGameObjectsWithTag("Enemy").Length == 0;
+        bool arenaIsClear = GameManager.GetAliveEnemies() <= 0;
         if (arenaIsClear)
         {
             if (!waitingForNextWave)
@@ -140,7 +140,7 @@ public class EnemySpawner : MonoBehaviour
             0f
         );
 
-        GameObject spawnedEnemy = Instantiate(prefab, spawnPos, Quaternion.identity);
+        GameObject spawnedEnemy = ObjectPoolManager.Spawn(prefab, spawnPos, Quaternion.identity);
         EnemyAI enemy = spawnedEnemy.GetComponent<EnemyAI>();
         if (enemy != null)
         {
