@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -8,15 +9,23 @@ public class GameManager : MonoBehaviour
 
     [Header("Scoring")]
     [SerializeField] private int defaultPointsPerKill = 100;
+    [SerializeField] private float restartDelay = 2.5f;
 
     private int currentWave;
     private int killCount;
     private int score;
+    private int currentHealth;
+    private int maxHealth;
+    private bool waveActive;
+    private bool isGameOver;
+    private Coroutine restartCoroutine;
 
     private Canvas hudCanvas;
+    private Text healthText;
     private Text waveText;
     private Text killsText;
     private Text scoreText;
+    private Text statusText;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -61,9 +70,34 @@ public class GameManager : MonoBehaviour
         EnsureInstance().RegisterEnemyKilled(pointsAwarded);
     }
 
+    public static void ReportPlayerHealth(int playerCurrentHealth, int playerMaxHealth)
+    {
+        EnsureInstance().SetPlayerHealth(playerCurrentHealth, playerMaxHealth);
+    }
+
+    public static void ReportPlayerDeath()
+    {
+        EnsureInstance().HandlePlayerDeath();
+    }
+
+    public static void ReportWaveState(bool active)
+    {
+        EnsureInstance().SetWaveState(active);
+    }
+
     public static void ResetStats()
     {
         EnsureInstance().ResetRun();
+    }
+
+    public static bool CanGameplayRun()
+    {
+        return !EnsureInstance().isGameOver;
+    }
+
+    public static int GetCurrentWaveNumber()
+    {
+        return EnsureInstance().currentWave;
     }
 
     private void Awake()
@@ -107,11 +141,54 @@ public class GameManager : MonoBehaviour
         RefreshHud();
     }
 
+    public void SetPlayerHealth(int playerCurrentHealth, int playerMaxHealth)
+    {
+        currentHealth = Mathf.Max(0, playerCurrentHealth);
+        maxHealth = Mathf.Max(0, playerMaxHealth);
+        RefreshHud();
+    }
+
+    public void HandlePlayerDeath()
+    {
+        if (isGameOver)
+        {
+            return;
+        }
+
+        isGameOver = true;
+        waveActive = false;
+        RefreshHud();
+
+        if (restartCoroutine != null)
+        {
+            StopCoroutine(restartCoroutine);
+        }
+
+        restartCoroutine = StartCoroutine(RestartCurrentSceneAfterDelay());
+    }
+
+    public void SetWaveState(bool active)
+    {
+        waveActive = active && !isGameOver;
+        RefreshHud();
+    }
+
     public void ResetRun()
     {
         currentWave = 0;
         killCount = 0;
         score = 0;
+        currentHealth = 0;
+        maxHealth = 0;
+        waveActive = false;
+        isGameOver = false;
+
+        if (restartCoroutine != null)
+        {
+            StopCoroutine(restartCoroutine);
+            restartCoroutine = null;
+        }
+
         RefreshHud();
     }
 
@@ -123,7 +200,7 @@ public class GameManager : MonoBehaviour
 
     private void EnsureHudExists()
     {
-        if (hudCanvas != null && waveText != null && killsText != null && scoreText != null)
+        if (hudCanvas != null && healthText != null && waveText != null && killsText != null && scoreText != null && statusText != null)
         {
             return;
         }
@@ -144,9 +221,11 @@ public class GameManager : MonoBehaviour
 
         canvasObject.AddComponent<GraphicRaycaster>();
 
-        waveText = CreateHudText("WaveText", hudFont, new Vector2(-24f, -24f));
-        killsText = CreateHudText("KillsText", hudFont, new Vector2(-24f, -64f));
-        scoreText = CreateHudText("ScoreText", hudFont, new Vector2(-24f, -104f));
+        healthText = CreateHudText("HealthText", hudFont, new Vector2(-24f, -24f));
+        waveText = CreateHudText("WaveText", hudFont, new Vector2(-24f, -64f));
+        killsText = CreateHudText("KillsText", hudFont, new Vector2(-24f, -104f));
+        scoreText = CreateHudText("ScoreText", hudFont, new Vector2(-24f, -144f));
+        statusText = CreateHudText("StatusText", hudFont, new Vector2(-24f, -184f));
     }
 
     private Text CreateHudText(string objectName, Font font, Vector2 anchoredPosition)
@@ -179,13 +258,26 @@ public class GameManager : MonoBehaviour
 
     private void RefreshHud()
     {
-        if (waveText == null || killsText == null || scoreText == null)
+        if (healthText == null || waveText == null || killsText == null || scoreText == null || statusText == null)
         {
             return;
         }
 
+        healthText.text = maxHealth > 0 ? $"HP: {currentHealth}/{maxHealth}" : "HP: --";
         waveText.text = $"Wave: {Mathf.Max(1, currentWave)}";
         killsText.text = $"Kills: {killCount}";
         scoreText.text = $"Score: {score:0000}";
+        statusText.text = isGameOver ? "Status: Game Over" : waveActive ? "Status: Wave Active" : "Status: Between Waves";
+        statusText.color = isGameOver
+            ? new Color(1f, 0.45f, 0.45f)
+            : waveActive
+                ? new Color(0.55f, 1f, 0.55f)
+                : new Color(1f, 0.9f, 0.45f);
+    }
+
+    private IEnumerator RestartCurrentSceneAfterDelay()
+    {
+        yield return new WaitForSeconds(restartDelay);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }

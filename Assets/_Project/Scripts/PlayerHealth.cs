@@ -1,50 +1,68 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public class PlayerHealth : MonoBehaviour
 {
     [Header("Health Settings")]
     public int maxHealth = 5;
-    private int currentHealth;
+    [SerializeField] private float damageInvulnerabilityTime = 0.5f;
 
     [Header("UI References")]
     public Slider healthSlider;
 
     [Header("Knockback Settings")]
     public float knockbackTotalTime = 0.2f;
+
+    private int currentHealth;
+    private float damageInvulnerabilityCounter;
     private float knockbackCounter;
+    private bool isDead;
     private Rigidbody2D rb;
 
-    void Start()
+    public int CurrentHealth => currentHealth;
+    public bool IsDead => isDead;
+
+    private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        currentHealth = maxHealth;
-
-        if (healthSlider != null)
-        {
-            healthSlider.maxValue = maxHealth;
-            healthSlider.value = maxHealth;
-        }
     }
 
-    void Update()
+    private void Start()
     {
-        // Таймер отталкивания
-        if (knockbackCounter > 0)
+        currentHealth = maxHealth;
+        UpdateHealthUi();
+        GameManager.ReportPlayerHealth(currentHealth, maxHealth);
+    }
+
+    private void Update()
+    {
+        if (knockbackCounter > 0f)
         {
             knockbackCounter -= Time.deltaTime;
         }
+
+        if (damageInvulnerabilityCounter > 0f)
+        {
+            damageInvulnerabilityCounter -= Time.deltaTime;
+        }
+    }
+
+    public bool CanTakeDamage()
+    {
+        return !isDead && damageInvulnerabilityCounter <= 0f && GameManager.CanGameplayRun();
     }
 
     public void TakeDamage(int damage)
     {
-        currentHealth -= damage;
-        
-        if (healthSlider != null)
+        if (damage <= 0 || !CanTakeDamage())
         {
-            healthSlider.value = currentHealth;
+            return;
         }
+
+        currentHealth = Mathf.Max(0, currentHealth - damage);
+        damageInvulnerabilityCounter = damageInvulnerabilityTime;
+        UpdateHealthUi();
+        GameManager.ReportPlayerHealth(currentHealth, maxHealth);
 
         if (currentHealth <= 0)
         {
@@ -54,19 +72,69 @@ public class PlayerHealth : MonoBehaviour
 
     public void ApplyKnockback(Vector2 force)
     {
+        if (isDead)
+        {
+            return;
+        }
+
         knockbackCounter = knockbackTotalTime;
-        rb.linearVelocity = Vector2.zero; // Сбрасываем старую скорость
-        rb.AddForce(force, ForceMode2D.Impulse); // Даем пинок
+        rb.linearVelocity = Vector2.zero;
+        rb.AddForce(force, ForceMode2D.Impulse);
     }
 
-    // Это свойство будет проверять наш скрипт движения
     public bool IsInKnockback()
     {
-        return knockbackCounter > 0;
+        return knockbackCounter > 0f;
     }
 
-    void Die()
+    public void Heal(int amount)
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        if (amount <= 0 || isDead)
+        {
+            return;
+        }
+
+        currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
+        UpdateHealthUi();
+        GameManager.ReportPlayerHealth(currentHealth, maxHealth);
+    }
+
+    public void IncreaseMaxHealth(int amount, bool healToFull = false)
+    {
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        maxHealth += amount;
+        currentHealth = healToFull ? maxHealth : Mathf.Min(currentHealth + amount, maxHealth);
+        UpdateHealthUi();
+        GameManager.ReportPlayerHealth(currentHealth, maxHealth);
+    }
+
+    private void Die()
+    {
+        if (isDead)
+        {
+            return;
+        }
+
+        isDead = true;
+        currentHealth = 0;
+        rb.linearVelocity = Vector2.zero;
+        UpdateHealthUi();
+        GameManager.ReportPlayerHealth(currentHealth, maxHealth);
+        GameManager.ReportPlayerDeath();
+    }
+
+    private void UpdateHealthUi()
+    {
+        if (healthSlider == null)
+        {
+            return;
+        }
+
+        healthSlider.maxValue = maxHealth;
+        healthSlider.value = currentHealth;
     }
 }

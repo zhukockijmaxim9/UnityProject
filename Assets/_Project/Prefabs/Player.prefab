@@ -244,8 +244,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TopDownCharacterController
   moveSpeed: 5
-  bulletPrefab: {fileID: 0}
-  firePoint: {fileID: 0}
+  bulletPrefab: {fileID: 3742799303467310150, guid: 88659e701c4132a48aa0f362661bd7ca, type: 3}
+  firePoint: {fileID: 4004385432317177369}
+  fireRate: 4
 --- !u!1 &6584145229982162935
 GameObject:
   m_ObjectHideFlags: 0

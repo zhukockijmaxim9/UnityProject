@@ -1,30 +1,59 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class Bullet : MonoBehaviour
 {
     public float speed = 15f;
-    public int damage = 1; // Урон одной пули
+    public int damage = 1;
 
-    void Start()
+    [SerializeField] private float lifetime = 3f;
+    [SerializeField] private float knockbackForce = 3f;
+
+    private Rigidbody2D rb;
+    private float currentSpeed;
+    private int currentDamage;
+    private float currentKnockbackForce;
+
+    private void Awake()
     {
-        GetComponent<Rigidbody2D>().linearVelocity = transform.right * speed;
-        Destroy(gameObject, 3f);
+        rb = GetComponent<Rigidbody2D>();
+        currentSpeed = speed;
+        currentDamage = damage;
+        currentKnockbackForce = knockbackForce;
+    }
+
+    private void Start()
+    {
+        rb.linearVelocity = transform.right * currentSpeed;
+        Destroy(gameObject, lifetime);
+    }
+
+    public void Initialize(float newSpeed, int newDamage, float newKnockbackForce)
+    {
+        currentSpeed = newSpeed;
+        currentDamage = newDamage;
+        currentKnockbackForce = newKnockbackForce;
+
+        if (rb != null)
+        {
+            rb.linearVelocity = transform.right * currentSpeed;
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Enemy"))
+        if (!other.CompareTag("Enemy"))
         {
-            EnemyAI enemy = other.GetComponent<EnemyAI>();
-            if (enemy != null)
-            {
-                enemy.TakeDamage(damage);
-                
-                // Вычисляем направление полета пули и толкаем зомби
-                Vector2 knockback = transform.right * 3f; // 3f - сила толчка пули
-                enemy.ApplyKnockback(knockback);
-            }
-            Destroy(gameObject);
+            return;
         }
+
+        EnemyAI enemy = other.GetComponent<EnemyAI>();
+        if (enemy != null)
+        {
+            enemy.TakeDamage(currentDamage);
+            enemy.ApplyKnockback((Vector2)transform.right * currentKnockbackForce);
+        }
+
+        Destroy(gameObject);
     }
 }

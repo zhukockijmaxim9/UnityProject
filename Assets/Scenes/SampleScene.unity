@@ -309,7 +309,6 @@ GameObject:
   m_Component:
   - component: {fileID: 619394802}
   - component: {fileID: 619394801}
-  - component: {fileID: 619394803}
   m_Layer: 0
   m_Name: Global Light 2D
   m_TagString: Untagged
@@ -384,21 +383,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &619394803
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 619394800}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a3483f2a3b4929c42aab638b102c0f1a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
-  maxHealth: 5
-  healthSlider: {fileID: 0}
-  knockbackTotalTime: 0.2
 --- !u!1 &683574281
 GameObject:
   m_ObjectHideFlags: 0
@@ -898,6 +882,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawner
   enemyPrefab: {fileID: 6099850138208741684, guid: f19c2b75b60d2084e9b5e8d9b0964be0, type: 3}
+  bossPrefab: {fileID: 6099850138208741684, guid: 750a40e98ac5a81479c5e0a325ff3d55, type: 3}
   spawnRate: 2
   spawnDistance: 15
 --- !u!4 &1868029183
