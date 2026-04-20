@@ -108,6 +108,11 @@ public class WeaponController : MonoBehaviour
         nextShotTime = Time.time + (1f / Mathf.Max(0.01f, currentFireRate));
         ReportAmmo();
 
+        if (CameraShakeManager.Instance != null)
+        {
+            CameraShakeManager.Instance.ShakeOnShot();
+        }
+
         if (currentAmmo <= 0)
         {
             BeginReload();

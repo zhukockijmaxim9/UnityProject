@@ -64,6 +64,11 @@ public class PlayerHealth : MonoBehaviour
         UpdateHealthUi();
         GameManager.ReportPlayerHealth(currentHealth, maxHealth);
 
+        if (CameraShakeManager.Instance != null)
+        {
+            CameraShakeManager.Instance.ShakeOnHit();
+        }
+
         if (currentHealth <= 0)
         {
             Die();
