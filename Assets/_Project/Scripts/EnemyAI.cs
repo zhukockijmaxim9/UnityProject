@@ -2,17 +2,26 @@ using UnityEngine;
 
 public class EnemyAI : MonoBehaviour
 {
-    [Header("Settings")]
-    public float speed = 2f; // Скорость зомби (чуть медленнее игрока)
-
+    [Header("Movement Settings")]
+    public float speed = 2f;
     private Transform player;
     private Rigidbody2D rb;
+
+    [Header("Health & Combat")]
+    public int health = 2;
+    public int damageToPlayer = 1;
+    public float attackRate = 1f;
+    private float nextAttackTime;
+
+    [Header("Knockback Settings")]
+    public float knockbackTotalTime = 0.2f; // Время, в течение которого зомби не может идти сам
+    private float knockbackCounter;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         
-        // Ищем игрока на сцене по тегу
+        // Автоматически находим игрока по тегу
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
         {
@@ -22,34 +31,63 @@ public class EnemyAI : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (player != null)
+        if (player == null) return;
+
+        // ПРОВЕРКА: Если нас оттолкнули, мы ждем и не управляем скоростью
+        if (knockbackCounter > 0)
         {
-            // Находим направление к игроку
+            knockbackCounter -= Time.fixedDeltaTime;
+        }
+        else
+        {
+            // ОБЫЧНОЕ ДВИЖЕНИЕ
             Vector2 direction = (player.position - transform.position).normalized;
-            
-            // Двигаем зомби через физику
             rb.linearVelocity = direction * speed;
 
-            // Поворачиваем зомби лицом к игроку
+            // Поворот в сторону игрока
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             rb.rotation = angle;
         }
     }
 
-    // Проверка попадания пули
-    private void OnTriggerEnter2D(Collider2D other)
+    public void TakeDamage(int damage)
     {
-        // Если в нас попал объект с тегом Bullet
-        if (other.CompareTag("Bullet"))
+        health -= damage;
+        Debug.Log("Зомби получил урон! Осталось: " + health);
+
+        if (health <= 0)
         {
-            Die();
-            Destroy(other.gameObject); // Уничтожаем пулю
+            Destroy(gameObject);
         }
     }
 
-    void Die()
+    // МЕТОД ДЛЯ ОТТАЛКИВАНИЯ (вызывается из пули)
+    public void ApplyKnockback(Vector2 force)
     {
-        // Здесь можно добавить эффекты крови или звук
-        Destroy(gameObject);
+        knockbackCounter = knockbackTotalTime; // Запускаем таймер "шока"
+        rb.linearVelocity = Vector2.zero;            // Обнуляем текущую скорость ходьбы
+        rb.AddForce(force, ForceMode2D.Impulse); // Даем физический пинок
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        // Если коснулись игрока
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            if (Time.time >= nextAttackTime)
+            {
+                PlayerHealth pHealth = collision.gameObject.GetComponent<PlayerHealth>();
+                if (pHealth != null)
+                {
+                    pHealth.TakeDamage(damageToPlayer);
+                    
+                    // Отталкиваем игрока при укусе
+                    Vector2 knockbackDir = (collision.transform.position - transform.position).normalized;
+                    pHealth.ApplyKnockback(knockbackDir * 7f); // Сила толчка игрока
+                    
+                    nextAttackTime = Time.time + attackRate;
+                }
+            }
+        }
     }
 }

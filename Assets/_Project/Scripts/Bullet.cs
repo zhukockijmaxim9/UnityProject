@@ -2,23 +2,29 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    public float speed = 10f;
-    public float lifeTime = 3f; // Чтобы пули не летели вечно, засоряя память
+    public float speed = 15f;
+    public int damage = 1; // Урон одной пули
 
     void Start()
     {
-        // Пуля летит "вперед" (вправо в 2D) со старта
         GetComponent<Rigidbody2D>().linearVelocity = transform.right * speed;
-        Destroy(gameObject, lifeTime);
+        Destroy(gameObject, 3f);
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        // Здесь будет урон врагу
-        if (collision.CompareTag("Enemy")) 
+        if (other.CompareTag("Enemy"))
         {
-            // Destroy(collision.gameObject); // Пока просто удаляем врага
-            Destroy(gameObject); // Удаляем пулю
+            EnemyAI enemy = other.GetComponent<EnemyAI>();
+            if (enemy != null)
+            {
+                enemy.TakeDamage(damage);
+                
+                // Вычисляем направление полета пули и толкаем зомби
+                Vector2 knockback = transform.right * 3f; // 3f - сила толчка пули
+                enemy.ApplyKnockback(knockback);
+            }
+            Destroy(gameObject);
         }
     }
 }
