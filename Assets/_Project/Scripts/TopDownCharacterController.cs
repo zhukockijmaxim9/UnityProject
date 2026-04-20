@@ -1,11 +1,24 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class TopDownCharacterController : MonoBehaviour
 {
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 5f;
+
+    [Header("Dash")]
+    [SerializeField] private float dashSpeed = 12f;
+    [SerializeField] private float dashDuration = 0.18f;
+    [SerializeField] private float dashCooldown = 0.45f;
+
+    [Header("Stamina")]
+    [SerializeField] private float maxStamina = 100f;
+    [SerializeField] private float dashStaminaCost = 30f;
+    [SerializeField] private float staminaRegenRate = 24f;
+    [SerializeField] private float staminaRegenDelay = 0.6f;
+    [SerializeField] private Slider staminaSlider;
 
     [Header("Shooting")]
     [SerializeField] private GameObject bulletPrefab;
@@ -16,15 +29,27 @@ public class TopDownCharacterController : MonoBehaviour
     private Camera mainCamera;
     private Vector2 moveInput;
     private Vector2 mousePos;
+    private Vector2 dashDirection;
     private PlayerHealth playerHealth;
     private float nextShotTime;
+    private float currentStamina;
+    private float dashTimer;
+    private float dashCooldownTimer;
+    private float staminaRegenDelayTimer;
+
+    public float CurrentStamina => currentStamina;
+    public float MaxStamina => maxStamina;
+    public bool IsDashing => dashTimer > 0f;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         mainCamera = Camera.main;
         playerHealth = GetComponent<PlayerHealth>();
+        currentStamina = maxStamina;
+
         ResolveFirePoint();
+        UpdateStaminaUi();
     }
 
     public void OnMove(InputValue value)
@@ -35,6 +60,19 @@ public class TopDownCharacterController : MonoBehaviour
     public void OnAttack()
     {
         TryShoot();
+    }
+
+    public void OnDash(InputValue value)
+    {
+        if (value.isPressed)
+        {
+            TryDash();
+        }
+    }
+
+    public void OnSprint(InputValue value)
+    {
+        OnDash(value);
     }
 
     private void Update()
@@ -48,6 +86,8 @@ public class TopDownCharacterController : MonoBehaviour
         {
             mousePos = mainCamera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
         }
+
+        UpdateDashAndStaminaTimers();
     }
 
     private void FixedUpdate()
@@ -63,13 +103,19 @@ public class TopDownCharacterController : MonoBehaviour
             return;
         }
 
+        if (IsDashing)
+        {
+            rb.linearVelocity = dashDirection * dashSpeed;
+            RotateTowards(dashDirection);
+            return;
+        }
+
         rb.linearVelocity = moveInput * moveSpeed;
 
         Vector2 lookDirection = mousePos - rb.position;
         if (lookDirection.sqrMagnitude > 0.001f)
         {
-            float angle = Mathf.Atan2(lookDirection.y, lookDirection.x) * Mathf.Rad2Deg;
-            rb.rotation = angle;
+            RotateTowards(lookDirection.normalized);
         }
     }
 
@@ -96,6 +142,68 @@ public class TopDownCharacterController : MonoBehaviour
         nextShotTime = Time.time + (1f / Mathf.Max(0.01f, fireRate));
     }
 
+    private void TryDash()
+    {
+        if (!CanAct() || IsDashing || dashCooldownTimer > 0f || currentStamina < dashStaminaCost)
+        {
+            return;
+        }
+
+        Vector2 desiredDashDirection = moveInput.sqrMagnitude > 0.01f ? moveInput.normalized : transform.right;
+        if (desiredDashDirection.sqrMagnitude <= 0.001f)
+        {
+            desiredDashDirection = Vector2.right;
+        }
+
+        dashDirection = desiredDashDirection;
+        dashTimer = dashDuration;
+        dashCooldownTimer = dashCooldown;
+        currentStamina = Mathf.Max(0f, currentStamina - dashStaminaCost);
+        staminaRegenDelayTimer = staminaRegenDelay;
+        UpdateStaminaUi();
+    }
+
+    private void UpdateDashAndStaminaTimers()
+    {
+        if (dashTimer > 0f)
+        {
+            dashTimer -= Time.deltaTime;
+            if (dashTimer <= 0f)
+            {
+                dashTimer = 0f;
+                rb.linearVelocity = Vector2.zero;
+            }
+        }
+
+        if (dashCooldownTimer > 0f)
+        {
+            dashCooldownTimer -= Time.deltaTime;
+        }
+
+        if (staminaRegenDelayTimer > 0f)
+        {
+            staminaRegenDelayTimer -= Time.deltaTime;
+            return;
+        }
+
+        if (currentStamina < maxStamina)
+        {
+            currentStamina = Mathf.Min(maxStamina, currentStamina + (staminaRegenRate * Time.deltaTime));
+            UpdateStaminaUi();
+        }
+    }
+
+    private void RotateTowards(Vector2 direction)
+    {
+        if (direction.sqrMagnitude <= 0.001f)
+        {
+            return;
+        }
+
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        rb.rotation = angle;
+    }
+
     private void ResolveFirePoint()
     {
         if (firePoint != null)
@@ -118,5 +226,16 @@ public class TopDownCharacterController : MonoBehaviour
                 return;
             }
         }
+    }
+
+    private void UpdateStaminaUi()
+    {
+        if (staminaSlider == null)
+        {
+            return;
+        }
+
+        staminaSlider.maxValue = maxStamina;
+        staminaSlider.value = currentStamina;
     }
 }
