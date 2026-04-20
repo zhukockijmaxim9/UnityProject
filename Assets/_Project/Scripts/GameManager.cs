@@ -16,12 +16,15 @@ public class GameManager : MonoBehaviour
     private int score;
     private int currentHealth;
     private int maxHealth;
+    private int currentAmmo;
+    private int maxAmmo;
     private bool waveActive;
     private bool isGameOver;
     private Coroutine restartCoroutine;
 
     private Canvas hudCanvas;
     private Text healthText;
+    private Text ammoText;
     private Text waveText;
     private Text killsText;
     private Text scoreText;
@@ -78,6 +81,11 @@ public class GameManager : MonoBehaviour
     public static void ReportPlayerDeath()
     {
         EnsureInstance().HandlePlayerDeath();
+    }
+
+    public static void ReportWeaponAmmo(int ammoInMagazine, int magazineSize)
+    {
+        EnsureInstance().SetWeaponAmmo(ammoInMagazine, magazineSize);
     }
 
     public static void ReportWaveState(bool active)
@@ -167,6 +175,13 @@ public class GameManager : MonoBehaviour
         restartCoroutine = StartCoroutine(RestartCurrentSceneAfterDelay());
     }
 
+    public void SetWeaponAmmo(int ammoInMagazine, int magazineSize)
+    {
+        currentAmmo = Mathf.Max(0, ammoInMagazine);
+        maxAmmo = Mathf.Max(0, magazineSize);
+        RefreshHud();
+    }
+
     public void SetWaveState(bool active)
     {
         waveActive = active && !isGameOver;
@@ -180,6 +195,8 @@ public class GameManager : MonoBehaviour
         score = 0;
         currentHealth = 0;
         maxHealth = 0;
+        currentAmmo = 0;
+        maxAmmo = 0;
         waveActive = false;
         isGameOver = false;
 
@@ -200,7 +217,7 @@ public class GameManager : MonoBehaviour
 
     private void EnsureHudExists()
     {
-        if (hudCanvas != null && healthText != null && waveText != null && killsText != null && scoreText != null && statusText != null)
+        if (hudCanvas != null && healthText != null && ammoText != null && waveText != null && killsText != null && scoreText != null && statusText != null)
         {
             return;
         }
@@ -222,10 +239,11 @@ public class GameManager : MonoBehaviour
         canvasObject.AddComponent<GraphicRaycaster>();
 
         healthText = CreateHudText("HealthText", hudFont, new Vector2(-24f, -24f));
-        waveText = CreateHudText("WaveText", hudFont, new Vector2(-24f, -64f));
-        killsText = CreateHudText("KillsText", hudFont, new Vector2(-24f, -104f));
-        scoreText = CreateHudText("ScoreText", hudFont, new Vector2(-24f, -144f));
-        statusText = CreateHudText("StatusText", hudFont, new Vector2(-24f, -184f));
+        ammoText = CreateHudText("AmmoText", hudFont, new Vector2(-24f, -64f));
+        waveText = CreateHudText("WaveText", hudFont, new Vector2(-24f, -104f));
+        killsText = CreateHudText("KillsText", hudFont, new Vector2(-24f, -144f));
+        scoreText = CreateHudText("ScoreText", hudFont, new Vector2(-24f, -184f));
+        statusText = CreateHudText("StatusText", hudFont, new Vector2(-24f, -224f));
     }
 
     private Text CreateHudText(string objectName, Font font, Vector2 anchoredPosition)
@@ -258,12 +276,13 @@ public class GameManager : MonoBehaviour
 
     private void RefreshHud()
     {
-        if (healthText == null || waveText == null || killsText == null || scoreText == null || statusText == null)
+        if (healthText == null || ammoText == null || waveText == null || killsText == null || scoreText == null || statusText == null)
         {
             return;
         }
 
         healthText.text = maxHealth > 0 ? $"HP: {currentHealth}/{maxHealth}" : "HP: --";
+        ammoText.text = maxAmmo > 0 ? $"Ammo: {currentAmmo}/{maxAmmo}" : "Ammo: --";
         waveText.text = $"Wave: {Mathf.Max(1, currentWave)}";
         killsText.text = $"Kills: {killCount}";
         scoreText.text = $"Score: {score:0000}";

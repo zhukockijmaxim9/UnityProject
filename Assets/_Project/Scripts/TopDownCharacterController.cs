@@ -20,7 +20,7 @@ public class TopDownCharacterController : MonoBehaviour
     [SerializeField] private float staminaRegenDelay = 0.6f;
     [SerializeField] private Slider staminaSlider;
 
-    [Header("Shooting")]
+    [Header("Default Weapon Bootstrap")]
     [SerializeField] private GameObject bulletPrefab;
     [SerializeField] private Transform firePoint;
     [SerializeField] private float fireRate = 4f;
@@ -31,7 +31,7 @@ public class TopDownCharacterController : MonoBehaviour
     private Vector2 mousePos;
     private Vector2 dashDirection;
     private PlayerHealth playerHealth;
-    private float nextShotTime;
+    private WeaponController weaponController;
     private float currentStamina;
     private float dashTimer;
     private float dashCooldownTimer;
@@ -46,9 +46,16 @@ public class TopDownCharacterController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         mainCamera = Camera.main;
         playerHealth = GetComponent<PlayerHealth>();
+        weaponController = GetComponent<WeaponController>();
+        if (weaponController == null)
+        {
+            weaponController = gameObject.AddComponent<WeaponController>();
+        }
+
         currentStamina = maxStamina;
 
         ResolveFirePoint();
+        weaponController.Bootstrap(bulletPrefab, firePoint, fireRate);
         UpdateStaminaUi();
     }
 
@@ -59,7 +66,34 @@ public class TopDownCharacterController : MonoBehaviour
 
     public void OnAttack()
     {
-        TryShoot();
+        if (CanAct())
+        {
+            weaponController.TryFire();
+        }
+    }
+
+    public void OnReload(InputValue value)
+    {
+        if (value.isPressed && CanAct())
+        {
+            weaponController.TryReload();
+        }
+    }
+
+    public void OnPrevious(InputValue value)
+    {
+        if (value.isPressed && CanAct())
+        {
+            weaponController.PreviousWeapon();
+        }
+    }
+
+    public void OnNext(InputValue value)
+    {
+        if (value.isPressed && CanAct())
+        {
+            weaponController.NextWeapon();
+        }
     }
 
     public void OnDash(InputValue value)
@@ -122,24 +156,6 @@ public class TopDownCharacterController : MonoBehaviour
     private bool CanAct()
     {
         return GameManager.CanGameplayRun() && playerHealth != null && !playerHealth.IsDead;
-    }
-
-    private void TryShoot()
-    {
-        if (!CanAct() || Time.time < nextShotTime)
-        {
-            return;
-        }
-
-        ResolveFirePoint();
-        if (bulletPrefab == null || firePoint == null)
-        {
-            Debug.LogWarning("Player shooting setup is incomplete. Bullet prefab or fire point is missing.", this);
-            return;
-        }
-
-        Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
-        nextShotTime = Time.time + (1f / Mathf.Max(0.01f, fireRate));
     }
 
     private void TryDash()
