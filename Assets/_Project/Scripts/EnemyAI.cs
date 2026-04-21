@@ -26,6 +26,11 @@ public class EnemyAI : MonoBehaviour
 
     [Header("Knockback Settings")]
     public float knockbackTotalTime = 0.2f;
+    [SerializeField] private float knockbackRepeatDelay = 0.1f;
+    [SerializeField] private float knockbackMass = 1f;
+    [SerializeField] private float dasherKnockbackMassMultiplier = 0.85f;
+    [SerializeField] private float bruiserKnockbackMassMultiplier = 1.75f;
+    [SerializeField] private float bossKnockbackMassMultiplier = 3f;
 
     [Header("Dash Settings")]
     [SerializeField] private float dashSpeed = 7.5f;
@@ -43,6 +48,7 @@ public class EnemyAI : MonoBehaviour
     private Rigidbody2D rb;
     private float nextAttackTime;
     private float knockbackCounter;
+    private float nextKnockbackTime;
     private float nextDashTime;
     private float dashTimer;
     private float nextSummonTime;
@@ -54,6 +60,8 @@ public class EnemyAI : MonoBehaviour
     private int baseScoreValue;
     private int baseDamageToPlayer;
     private float baseAttackRate;
+    private float baseKnockbackMass;
+    private float currentKnockbackMass;
     private EnemyArchetype currentArchetype;
     private bool runtimeConfigured;
 
@@ -65,6 +73,8 @@ public class EnemyAI : MonoBehaviour
         baseScoreValue = scoreValue;
         baseDamageToPlayer = damageToPlayer;
         baseAttackRate = attackRate;
+        baseKnockbackMass = Mathf.Max(0.05f, knockbackMass);
+        currentKnockbackMass = baseKnockbackMass;
     }
 
     private void OnEnable()
@@ -72,6 +82,7 @@ public class EnemyAI : MonoBehaviour
         GameManager.ReportEnemySpawned();
         isDead = false;
         knockbackCounter = 0f;
+        nextKnockbackTime = 0f;
         dashTimer = 0f;
     }
 
@@ -147,6 +158,7 @@ public class EnemyAI : MonoBehaviour
         damageToPlayer = Mathf.Max(1, Mathf.RoundToInt(baseDamageToPlayer + (waveScale * 0.15f)));
         attackRate = Mathf.Max(0.35f, baseAttackRate * (1f - (waveScale * 0.02f)));
         scoreValue = Mathf.Max(10, Mathf.RoundToInt(baseScoreValue * (1f + (waveScale * 0.3f))));
+        currentKnockbackMass = GetKnockbackMassForArchetype(currentArchetype);
 
         switch (currentArchetype)
         {
@@ -201,9 +213,21 @@ public class EnemyAI : MonoBehaviour
 
     public void ApplyKnockback(Vector2 force)
     {
+        if (isDead || force.sqrMagnitude <= 0.0001f || Time.time < nextKnockbackTime)
+        {
+            return;
+        }
+
+        Vector2 appliedImpulse = force / Mathf.Max(0.05f, currentKnockbackMass);
+        if (appliedImpulse.sqrMagnitude <= 0.0001f)
+        {
+            return;
+        }
+
+        nextKnockbackTime = Time.time + knockbackRepeatDelay;
         knockbackCounter = knockbackTotalTime;
         rb.linearVelocity = Vector2.zero;
-        rb.AddForce(force, ForceMode2D.Impulse);
+        rb.AddForce(appliedImpulse, ForceMode2D.Impulse);
     }
 
     private void OnCollisionStay2D(Collision2D collision)
@@ -283,5 +307,27 @@ public class EnemyAI : MonoBehaviour
                 minion.ConfigureForWave(EnemyArchetype.Walker, currentWaveNumber);
             }
         }
+    }
+
+    private float GetKnockbackMassForArchetype(EnemyArchetype archetype)
+    {
+        float multiplier = 1f;
+
+        switch (archetype)
+        {
+            case EnemyArchetype.Dasher:
+                multiplier = dasherKnockbackMassMultiplier;
+                break;
+
+            case EnemyArchetype.Bruiser:
+                multiplier = bruiserKnockbackMassMultiplier;
+                break;
+
+            case EnemyArchetype.Boss:
+                multiplier = bossKnockbackMassMultiplier;
+                break;
+        }
+
+        return Mathf.Max(0.05f, baseKnockbackMass * multiplier);
     }
 }

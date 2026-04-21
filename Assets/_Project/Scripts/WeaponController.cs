@@ -14,7 +14,7 @@ public class WeaponController : MonoBehaviour
     [SerializeField] private GameObject fallbackBulletPrefab;
     [SerializeField] private int fallbackDamage = 1;
     [SerializeField] private float fallbackFireRate = 4f;
-    [SerializeField] private float fallbackProjectileSpeed = 15f;
+    [SerializeField] private float fallbackProjectileSpeed = 150f;
     [SerializeField] private float fallbackProjectileKnockback = 3f;
     [SerializeField] private int fallbackMagazineSize = 8;
     [SerializeField] private float fallbackReloadTime = 1.2f;
