@@ -197,7 +197,7 @@ MonoBehaviour:
   dashDuration: 0.35
   dashCooldown: 2.75
   dashTriggerDistance: 6
-  summonPrefab: {fileID: 6099850138208741684}
+  summonPrefab: {fileID: 6099850138208741684, guid: f19c2b75b60d2084e9b5e8d9b0964be0, type: 3}
   summonsPerCycle: 2
   summonCooldown: 7
   summonRadius: 1.5
