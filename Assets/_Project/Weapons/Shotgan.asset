@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f250ce1b6dc4b90a0f6ba69d789c222, type: 3}
+  m_Name: Shotgan
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
+  weaponName: Weapon
+  bulletPrefab: {fileID: 0}
+  damage: 1
+  fireRate: 4
+  projectileSpeed: 15
+  projectileKnockback: 3
+  magazineSize: 8
+  reloadTime: 1.2
+  projectilesPerShot: 1
+  spreadAngle: 0

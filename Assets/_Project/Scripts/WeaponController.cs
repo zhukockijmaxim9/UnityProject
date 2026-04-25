@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class WeaponController : MonoBehaviour
 {
@@ -73,6 +74,8 @@ public class WeaponController : MonoBehaviour
 
     private void Update()
     {
+        HandleKeyboardInput();
+
         if (!isReloading)
         {
             return;
@@ -82,6 +85,21 @@ public class WeaponController : MonoBehaviour
         if (reloadTimer <= 0f)
         {
             FinishReload();
+        }
+    }
+
+    private void HandleKeyboardInput()
+    {
+        if (Keyboard.current == null) return;
+
+        if (Keyboard.current.digit1Key.wasPressedThisFrame) EquipWeapon(0);
+        else if (Keyboard.current.digit2Key.wasPressedThisFrame) EquipWeapon(1);
+        else if (Keyboard.current.digit3Key.wasPressedThisFrame) EquipWeapon(2);
+        else if (Keyboard.current.digit4Key.wasPressedThisFrame) EquipWeapon(3);
+
+        if (Keyboard.current.rKey.wasPressedThisFrame)
+        {
+            TryReload();
         }
     }
 
@@ -194,7 +212,7 @@ public class WeaponController : MonoBehaviour
         ApplyFallbackWeapon();
     }
 
-    private void EquipWeapon(int weaponIndex)
+    public void EquipWeapon(int weaponIndex)
     {
         if (availableWeapons == null || weaponIndex < 0 || weaponIndex >= availableWeapons.Length)
         {
