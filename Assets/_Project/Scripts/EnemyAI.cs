@@ -18,7 +18,7 @@ public class EnemyAI : MonoBehaviour
     public float speed = 2f;
 
     [Header("Health & Combat")]
-    public int health = 2;
+    public int health = 100;
     public int scoreValue = 100;
     public int damageToPlayer = 1;
     public float attackRate = 1f;

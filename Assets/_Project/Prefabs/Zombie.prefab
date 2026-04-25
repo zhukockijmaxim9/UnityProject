@@ -182,7 +182,7 @@ MonoBehaviour:
   startingArchetype: 0
   stoppingDistance: 0.6
   speed: 2
-  health: 2
+  health: 100
   scoreValue: 100
   damageToPlayer: 1
   attackRate: 1

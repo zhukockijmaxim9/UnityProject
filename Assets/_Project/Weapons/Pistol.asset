@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Pistol
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
   weaponName: Weapon
-  bulletPrefab: {fileID: 0}
-  damage: 1
+  bulletPrefab: {fileID: 3742799303467310150, guid: 88659e701c4132a48aa0f362661bd7ca, type: 3}
+  damage: 25
   fireRate: 4
   projectileSpeed: 15
   projectileKnockback: 3

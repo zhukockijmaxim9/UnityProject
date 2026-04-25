@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f250ce1b6dc4b90a0f6ba69d789c222, type: 3}
   m_Name: Shotgan
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
-  weaponName: Weapon
-  bulletPrefab: {fileID: 0}
-  damage: 1
-  fireRate: 4
+  weaponName: Shotgan
+  bulletPrefab: {fileID: 3742799303467310150, guid: 88659e701c4132a48aa0f362661bd7ca, type: 3}
+  damage: 18
+  fireRate: 1.5
   projectileSpeed: 15
-  projectileKnockback: 3
-  magazineSize: 8
-  reloadTime: 1.2
-  projectilesPerShot: 1
-  spreadAngle: 0
+  projectileKnockback: 8
+  magazineSize: 6
+  reloadTime: 2.5
+  projectilesPerShot: 8
+  spreadAngle: 35
