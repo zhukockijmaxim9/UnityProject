@@ -184,7 +184,7 @@ MonoBehaviour:
   speed: 2
   health: 100
   scoreValue: 100
-  damageToPlayer: 1
+  damageToPlayer: 10
   attackRate: 1
   playerKnockbackForce: 7
   knockbackTotalTime: 0.12
@@ -201,3 +201,6 @@ MonoBehaviour:
   summonsPerCycle: 2
   summonCooldown: 7
   summonRadius: 1.5
+  explosionRadius: 3.5
+  explosionDamage: 40
+  explosionEffectPrefab: {fileID: 0}

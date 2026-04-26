@@ -4,7 +4,7 @@ using UnityEngine.UI;
 public class PlayerHealth : MonoBehaviour
 {
     [Header("Health Settings")]
-    public int maxHealth = 5;
+    public int maxHealth = 100;
     [SerializeField] private float damageInvulnerabilityTime = 0.5f;
 
     [Header("UI References")]

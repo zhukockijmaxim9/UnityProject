@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 95331842295891}
   - component: {fileID: 670644290802326490}
   m_Layer: 0
-  m_Name: ZombieBoss
+  m_Name: Zombie_Spitter
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -30,7 +30,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -2.78, y: 3.78, z: 0}
-  m_LocalScale: {x: 4, y: 4, z: 2}
+  m_LocalScale: {x: 2, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -85,7 +85,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: -5291006867049801255, guid: 4c99f2b3afc9d9d47848fec297deb405, type: 3}
-  m_Color: {r: 0.20224388, g: 0.7207546, b: 0.19446772, a: 1}
+  m_Color: {r: 0.854902, g: 0.6470588, b: 0.1254902, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -179,12 +179,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0a1d209af3354a449ff6c93385391b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAI
-  startingArchetype: 0
+  startingArchetype: 5
   stoppingDistance: 0.6
   speed: 2
-  health: 20
+  health: 60
   scoreValue: 100
-  damageToPlayer: 20
+  damageToPlayer: 10
   attackRate: 1
   playerKnockbackForce: 7
   knockbackTotalTime: 0.12
@@ -197,10 +197,15 @@ MonoBehaviour:
   dashDuration: 0.35
   dashCooldown: 2.75
   dashTriggerDistance: 6
-  summonPrefab: {fileID: 6099850138208741684, guid: f19c2b75b60d2084e9b5e8d9b0964be0, type: 3}
+  summonPrefab: {fileID: 0}
   summonsPerCycle: 2
   summonCooldown: 7
   summonRadius: 1.5
   explosionRadius: 3.5
   explosionDamage: 40
   explosionEffectPrefab: {fileID: 0}
+  spitPrefab: {fileID: 3742799303467310150, guid: 969ea9fa4ea3cb246ad8df75141a46ef, type: 3}
+  spitRange: 7
+  spitRate: 1
+  spitProjectileSpeed: 10
+  spitDamage: 12
