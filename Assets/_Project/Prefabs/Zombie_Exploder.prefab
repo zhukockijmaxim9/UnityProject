@@ -201,6 +201,12 @@ MonoBehaviour:
   summonsPerCycle: 2
   summonCooldown: 7
   summonRadius: 1.5
-  explosionRadius: 3.5
+  explosionRadius: 2
   explosionDamage: 40
-  explosionEffectPrefab: {fileID: 0}
+  damagePopupPrefab: {fileID: 2178480866258582282, guid: 88cb758318f900045be4b0ae9781b3a4, type: 3}
+  explosionEffectPrefab: {fileID: 4502321048490451571, guid: 46464387c2c8bec40b5e73197a5e978f, type: 3}
+  spitPrefab: {fileID: 0}
+  spitRange: 7
+  spitRate: 2
+  spitProjectileSpeed: 10
+  spitDamage: 15

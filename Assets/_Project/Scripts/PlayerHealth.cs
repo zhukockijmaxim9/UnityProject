@@ -9,6 +9,7 @@ public class PlayerHealth : MonoBehaviour
 
     [Header("UI References")]
     public Slider healthSlider;
+    [SerializeField] private GameObject damagePopupPrefab;
 
     [Header("Knockback Settings")]
     public float knockbackTotalTime = 0.2f;
@@ -63,6 +64,7 @@ public class PlayerHealth : MonoBehaviour
         damageInvulnerabilityCounter = damageInvulnerabilityTime;
         UpdateHealthUi();
         GameManager.ReportPlayerHealth(currentHealth, maxHealth);
+        SpawnDamagePopup(damage);
 
         if (CameraShakeManager.Instance != null)
         {
@@ -141,5 +143,17 @@ public class PlayerHealth : MonoBehaviour
 
         healthSlider.maxValue = maxHealth;
         healthSlider.value = currentHealth;
+    }
+
+    private void SpawnDamagePopup(int amount)
+    {
+        if (damagePopupPrefab == null) return;
+
+        GameObject popupObj = Instantiate(damagePopupPrefab, transform.position + Vector3.up, Quaternion.identity);
+        DamagePopup popup = popupObj.GetComponent<DamagePopup>();
+        if (popup != null)
+        {
+            popup.Setup(amount, Color.red);
+        }
     }
 }

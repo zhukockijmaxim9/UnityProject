@@ -193,12 +193,18 @@ public class EnemySpawner : MonoBehaviour
                         interval = specialInterval
                     });
                 }
-                if (tier >= 2)
+                if (waveNumber >= 2)
                 {
                     wave.spawns.Add(new SpawnInstruction
                     {
+                        archetype = EnemyAI.EnemyArchetype.Spitter,
+                        amount = (waveNumber - 1) / 2,
+                        interval = specialInterval
+                    });
+                    wave.spawns.Add(new SpawnInstruction
+                    {
                         archetype = EnemyAI.EnemyArchetype.Exploder,
-                        amount = tier,
+                        amount = (waveNumber - 1) / 2,
                         interval = specialInterval + 0.2f
                     });
                 }
@@ -215,14 +221,20 @@ public class EnemySpawner : MonoBehaviour
                 wave.spawns.Add(new SpawnInstruction
                 {
                     archetype = EnemyAI.EnemyArchetype.Dasher,
-                    amount = 2 + tier,
+                    amount = 1 + tier,
                     interval = specialInterval
                 });
                 wave.spawns.Add(new SpawnInstruction
                 {
                     archetype = EnemyAI.EnemyArchetype.Spitter,
-                    amount = tier,
+                    amount = waveNumber - 1,
                     interval = specialInterval * 1.5f
+                });
+                wave.spawns.Add(new SpawnInstruction
+                {
+                    archetype = EnemyAI.EnemyArchetype.Exploder,
+                    amount = waveNumber - 1,
+                    interval = specialInterval * 1.8f
                 });
                 break;
 
@@ -250,6 +262,21 @@ public class EnemySpawner : MonoBehaviour
                         prefabOverride = bossPrefab
                     });
                 }
+                if (waveNumber >= 2)
+                {
+                    wave.spawns.Add(new SpawnInstruction
+                    {
+                        archetype = EnemyAI.EnemyArchetype.Spitter,
+                        amount = 1,
+                        interval = specialInterval
+                    });
+                    wave.spawns.Add(new SpawnInstruction
+                    {
+                        archetype = EnemyAI.EnemyArchetype.Exploder,
+                        amount = 1,
+                        interval = specialInterval + 0.5f
+                    });
+                }
                 break;
 
             default:
@@ -266,13 +293,19 @@ public class EnemySpawner : MonoBehaviour
                     amount = 1 + tier,
                     interval = specialInterval
                 });
-                if (tier >= 1)
+                if (waveNumber >= 2)
                 {
                     wave.spawns.Add(new SpawnInstruction
                     {
                         archetype = EnemyAI.EnemyArchetype.Spitter,
-                        amount = tier,
+                        amount = waveNumber / 2,
                         interval = specialInterval + 0.5f
+                    });
+                    wave.spawns.Add(new SpawnInstruction
+                    {
+                        archetype = EnemyAI.EnemyArchetype.Exploder,
+                        amount = waveNumber / 3,
+                        interval = specialInterval + 0.7f
                     });
                 }
                 if (tier >= 2)

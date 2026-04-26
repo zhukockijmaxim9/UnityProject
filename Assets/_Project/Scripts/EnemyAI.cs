@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class EnemyAI : MonoBehaviour
 {
@@ -49,6 +50,9 @@ public class EnemyAI : MonoBehaviour
     [Header("Exploder Settings")]
     [SerializeField] private float explosionRadius = 3.5f;
     [SerializeField] private int explosionDamage = 40;
+
+    [Header("Visual Effects")]
+    [SerializeField] private GameObject damagePopupPrefab;
     [SerializeField] private GameObject explosionEffectPrefab;
 
     [Header("Spitter Settings")]
@@ -78,11 +82,20 @@ public class EnemyAI : MonoBehaviour
     private float baseKnockbackMass;
     private float currentKnockbackMass;
     private EnemyArchetype currentArchetype;
+    private SpriteRenderer spriteRenderer;
+    private Color originalColor;
+    private Coroutine flashCoroutine;
     private bool runtimeConfigured;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            originalColor = spriteRenderer.color;
+        }
+        
         baseSpeed = speed;
         baseHealth = health;
         baseScoreValue = scoreValue;
@@ -228,20 +241,85 @@ public class EnemyAI : MonoBehaviour
         }
 
         currentHealth -= damage;
+        StartFlash();
+        SpawnDamagePopup(damage);
 
         if (currentHealth <= 0)
         {
-            isDead = true;
-            if (currentArchetype == EnemyArchetype.Exploder)
-            {
-                Explode();
-            }
-            else
-            {
-                GameManager.ReportEnemyKilled(scoreValue);
-                ObjectPoolManager.ReturnToPool(gameObject);
-            }
+            Die();
         }
+    }
+
+    private void SpawnDamagePopup(int amount)
+    {
+        if (damagePopupPrefab == null) return;
+
+        GameObject popupObj = Instantiate(damagePopupPrefab, transform.position + Vector3.up, Quaternion.identity);
+        DamagePopup popup = popupObj.GetComponent<DamagePopup>();
+        if (popup != null)
+        {
+            popup.Setup(amount, Color.yellow);
+        }
+    }
+
+    private void StartFlash()
+    {
+        if (flashCoroutine != null) StopCoroutine(flashCoroutine);
+        flashCoroutine = StartCoroutine(FlashRoutine());
+    }
+
+    private IEnumerator FlashRoutine()
+    {
+        if (spriteRenderer == null) yield break;
+        spriteRenderer.color = Color.red; // Вспышка красным
+        yield return new WaitForSeconds(0.1f);
+        spriteRenderer.color = originalColor;
+    }
+
+    private void Die()
+    {
+        if (isDead) return;
+        isDead = true;
+
+        if (currentArchetype == EnemyArchetype.Exploder)
+        {
+            Explode();
+        }
+        else
+        {
+            GameManager.ReportEnemyKilled(scoreValue);
+            StartCoroutine(DeathAnimationRoutine());
+        }
+    }
+
+    private IEnumerator DeathAnimationRoutine()
+    {
+        float duration = 0.4f;
+        float timer = 0f;
+        Vector3 startScale = transform.localScale;
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            float t = timer / duration;
+            
+            // Уменьшаем и делаем прозрачным
+            transform.localScale = Vector3.Lerp(startScale, Vector3.zero, t);
+            if (spriteRenderer != null)
+            {
+                Color c = spriteRenderer.color;
+                c.a = Mathf.Lerp(1f, 0f, t);
+                spriteRenderer.color = c;
+            }
+            
+            yield return null;
+        }
+
+        ObjectPoolManager.ReturnToPool(gameObject);
+        
+        // Сбрасываем для следующего использования из пула
+        transform.localScale = startScale;
+        if (spriteRenderer != null) spriteRenderer.color = originalColor;
     }
 
     private void Explode()
@@ -269,6 +347,13 @@ public class EnemyAI : MonoBehaviour
         }
 
         GameManager.ReportEnemyKilled(scoreValue);
+        
+        // Тряска камеры при взрыве
+        if (CameraShakeManager.Instance != null)
+        {
+            CameraShakeManager.Instance.ShakeOnHit(); // Используем сильную тряску
+        }
+
         ObjectPoolManager.ReturnToPool(gameObject);
     }
 
