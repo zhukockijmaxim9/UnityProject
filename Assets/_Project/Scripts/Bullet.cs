@@ -14,6 +14,7 @@ public class Bullet : MonoBehaviour
     private int currentDamage;
     private float currentKnockbackForce;
     private float returnTimer;
+    private bool isEnemyBullet;
 
     private void OnEnable()
     {
@@ -45,11 +46,12 @@ public class Bullet : MonoBehaviour
         }
     }
 
-    public void Initialize(float newSpeed, int newDamage, float newKnockbackForce)
+    public void Initialize(float newSpeed, int newDamage, float newKnockbackForce, bool fromEnemy = false)
     {
         currentSpeed = newSpeed;
         currentDamage = newDamage;
         currentKnockbackForce = newKnockbackForce;
+        isEnemyBullet = fromEnemy;
 
         if (rb != null)
         {
@@ -59,18 +61,31 @@ public class Bullet : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!other.CompareTag("Enemy"))
+        if (isEnemyBullet)
         {
-            return;
+            if (other.CompareTag("Player"))
+            {
+                PlayerHealth player = other.GetComponent<PlayerHealth>();
+                if (player != null)
+                {
+                    player.TakeDamage(currentDamage);
+                    player.ApplyKnockback((Vector2)transform.right * currentKnockbackForce);
+                }
+                ObjectPoolManager.ReturnToPool(gameObject);
+            }
         }
-
-        EnemyAI enemy = other.GetComponent<EnemyAI>();
-        if (enemy != null)
+        else
         {
-            enemy.TakeDamage(currentDamage);
-            enemy.ApplyKnockback((Vector2)transform.right * currentKnockbackForce);
+            if (other.CompareTag("Enemy"))
+            {
+                EnemyAI enemy = other.GetComponent<EnemyAI>();
+                if (enemy != null)
+                {
+                    enemy.TakeDamage(currentDamage);
+                    enemy.ApplyKnockback((Vector2)transform.right * currentKnockbackForce);
+                }
+                ObjectPoolManager.ReturnToPool(gameObject);
+            }
         }
-
-        ObjectPoolManager.ReturnToPool(gameObject);
     }
 }

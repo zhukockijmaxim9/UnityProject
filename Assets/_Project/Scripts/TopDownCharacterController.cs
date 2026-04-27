@@ -64,14 +64,6 @@ public class TopDownCharacterController : MonoBehaviour
         moveInput = value.Get<Vector2>();
     }
 
-    public void OnAttack()
-    {
-        if (CanAct())
-        {
-            weaponController.TryFire();
-        }
-    }
-
     public void OnReload(InputValue value)
     {
         if (value.isPressed && CanAct())
@@ -122,6 +114,16 @@ public class TopDownCharacterController : MonoBehaviour
         }
 
         UpdateDashAndStaminaTimers();
+        HandleContinuousAttack();
+    }
+
+    private void HandleContinuousAttack()
+    {
+        // Проверяем, зажата ли левая кнопка мыши напрямую через Mouse.current
+        if (Mouse.current != null && Mouse.current.leftButton.isPressed && CanAct())
+        {
+            weaponController.TryFire();
+        }
     }
 
     private void FixedUpdate()

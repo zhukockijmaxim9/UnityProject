@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
@@ -24,12 +25,12 @@ public class GameManager : MonoBehaviour
     private Coroutine restartCoroutine;
 
     private Canvas hudCanvas;
-    private Text healthText;
-    private Text ammoText;
-    private Text waveText;
-    private Text killsText;
-    private Text scoreText;
-    private Text statusText;
+    private TextMeshProUGUI healthText;
+    private TextMeshProUGUI ammoText;
+    private TextMeshProUGUI waveText;
+    private TextMeshProUGUI killsText;
+    private TextMeshProUGUI scoreText;
+    private TextMeshProUGUI statusText;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -235,9 +236,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        Font hudFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-
-        GameObject canvasObject = new GameObject("HUDCanvas");
+        GameObject canvasObject = new GameObject("HUDCanvas_Auto");
         canvasObject.transform.SetParent(transform, false);
 
         hudCanvas = canvasObject.AddComponent<Canvas>();
@@ -251,38 +250,37 @@ public class GameManager : MonoBehaviour
 
         canvasObject.AddComponent<GraphicRaycaster>();
 
-        healthText = CreateHudText("HealthText", hudFont, new Vector2(-24f, -24f));
-        ammoText = CreateHudText("AmmoText", hudFont, new Vector2(-24f, -64f));
-        waveText = CreateHudText("WaveText", hudFont, new Vector2(-24f, -104f));
-        killsText = CreateHudText("KillsText", hudFont, new Vector2(-24f, -144f));
-        scoreText = CreateHudText("ScoreText", hudFont, new Vector2(-24f, -184f));
-        statusText = CreateHudText("StatusText", hudFont, new Vector2(-24f, -224f));
+        // Создаем текстовые поля с небольшим отступом от края
+        float rightPadding = -40f;
+        healthText = CreateHudText("HealthText", new Vector2(rightPadding, -40f));
+        ammoText = CreateHudText("AmmoText", new Vector2(rightPadding, -80f));
+        waveText = CreateHudText("WaveText", new Vector2(rightPadding, -120f));
+        killsText = CreateHudText("KillsText", new Vector2(rightPadding, -160f));
+        scoreText = CreateHudText("ScoreText", new Vector2(rightPadding, -200f));
+        statusText = CreateHudText("StatusText", new Vector2(rightPadding, -240f));
     }
 
-    private Text CreateHudText(string objectName, Font font, Vector2 anchoredPosition)
+    private TextMeshProUGUI CreateHudText(string objectName, Vector2 anchoredPosition)
     {
         GameObject textObject = new GameObject(objectName);
         textObject.transform.SetParent(hudCanvas.transform, false);
 
-        Text textComponent = textObject.AddComponent<Text>();
-        textComponent.font = font;
-        textComponent.fontSize = 28;
-        textComponent.fontStyle = FontStyle.Bold;
+        TextMeshProUGUI textComponent = textObject.AddComponent<TextMeshProUGUI>();
+        textComponent.fontSize = 32;
+        textComponent.fontWeight = FontWeight.Bold;
         textComponent.color = Color.white;
-        textComponent.alignment = TextAnchor.UpperRight;
-        textComponent.horizontalOverflow = HorizontalWrapMode.Overflow;
-        textComponent.verticalOverflow = VerticalWrapMode.Overflow;
-
-        Outline outline = textObject.AddComponent<Outline>();
-        outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-        outline.effectDistance = new Vector2(2f, -2f);
+        textComponent.alignment = TextAlignmentOptions.Right;
+        
+        // Добавляем тень/обводку через настройки TMP
+        textComponent.outlineWidth = 0.2f;
+        textComponent.outlineColor = Color.black;
 
         RectTransform rectTransform = textObject.GetComponent<RectTransform>();
         rectTransform.anchorMin = new Vector2(1f, 1f);
         rectTransform.anchorMax = new Vector2(1f, 1f);
         rectTransform.pivot = new Vector2(1f, 1f);
         rectTransform.anchoredPosition = anchoredPosition;
-        rectTransform.sizeDelta = new Vector2(400f, 36f);
+        rectTransform.sizeDelta = new Vector2(500f, 50f);
 
         return textComponent;
     }

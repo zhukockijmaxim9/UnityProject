@@ -182,9 +182,9 @@ MonoBehaviour:
   startingArchetype: 0
   stoppingDistance: 0.6
   speed: 2
-  health: 2
+  health: 100
   scoreValue: 100
-  damageToPlayer: 1
+  damageToPlayer: 10
   attackRate: 1
   playerKnockbackForce: 7
   knockbackTotalTime: 0.12
@@ -201,3 +201,12 @@ MonoBehaviour:
   summonsPerCycle: 2
   summonCooldown: 7
   summonRadius: 1.5
+  explosionRadius: 3.5
+  explosionDamage: 40
+  damagePopupPrefab: {fileID: 2178480866258582282, guid: 88cb758318f900045be4b0ae9781b3a4, type: 3}
+  explosionEffectPrefab: {fileID: 0}
+  spitPrefab: {fileID: 0}
+  spitRange: 7
+  spitRate: 2
+  spitProjectileSpeed: 10
+  spitDamage: 15

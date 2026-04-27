@@ -196,7 +196,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 0}
   m_FillRect: {fileID: 2032476285}
   m_HandleRect: {fileID: 0}
@@ -640,13 +640,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Slider
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 0
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
@@ -666,7 +666,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 0}
   m_FillRect: {fileID: 757724248}
   m_HandleRect: {fileID: 0}
@@ -3541,7 +3541,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponController
   firePoint: {fileID: 418234995}
-  availableWeapons: []
+  availableWeapons:
+  - {fileID: 11400000, guid: 0ee0f8792df7c0042a1f67d9a7b9b01c, type: 2}
+  - {fileID: 11400000, guid: 28914fa42ce8ed449bdaaea6b86597b3, type: 2}
+  - {fileID: 11400000, guid: a9e2182cba21f9d498742411372868b0, type: 2}
+  - {fileID: 11400000, guid: f7790ced311f4be48a9c4f4c9d202108, type: 2}
   startingWeaponIndex: 0
   fallbackWeaponName: Pistol
   fallbackBulletPrefab: {fileID: 3742799303467310150, guid: 88659e701c4132a48aa0f362661bd7ca, type: 3}
