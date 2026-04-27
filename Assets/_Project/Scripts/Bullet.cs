@@ -29,6 +29,7 @@ public class Bullet : MonoBehaviour
         currentKnockbackForce = knockbackForce;
     }
 
+
     private void Start()
     {
         rb.linearVelocity = transform.right * currentSpeed;
@@ -61,6 +62,13 @@ public class Bullet : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        // 1. Проверяем попадание в стену (для всех типов пуль)
+        if (other.CompareTag("Wall"))
+        {
+            ObjectPoolManager.ReturnToPool(gameObject);
+            return; // Выходим из метода, чтобы не проверять врагов/игрока
+        }
+
         if (isEnemyBullet)
         {
             if (other.CompareTag("Player"))
