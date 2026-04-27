@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class EnemyAI : MonoBehaviour
 {
@@ -7,7 +8,9 @@ public class EnemyAI : MonoBehaviour
         Walker,
         Dasher,
         Bruiser,
-        Boss
+        Boss,
+        Exploder,
+        Spitter
     }
 
     [Header("Archetype")]
@@ -18,7 +21,7 @@ public class EnemyAI : MonoBehaviour
     public float speed = 2f;
 
     [Header("Health & Combat")]
-    public int health = 2;
+    public int health = 100;
     public int scoreValue = 100;
     public int damageToPlayer = 1;
     public float attackRate = 1f;
@@ -44,6 +47,21 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private float summonCooldown = 7f;
     [SerializeField] private float summonRadius = 1.5f;
 
+    [Header("Exploder Settings")]
+    [SerializeField] private float explosionRadius = 3.5f;
+    [SerializeField] private int explosionDamage = 40;
+
+    [Header("Visual Effects")]
+    [SerializeField] private GameObject damagePopupPrefab;
+    [SerializeField] private GameObject explosionEffectPrefab;
+
+    [Header("Spitter Settings")]
+    [SerializeField] private GameObject spitPrefab;
+    [SerializeField] private float spitRange = 7f;
+    [SerializeField] private float spitRate = 2f;
+    [SerializeField] private float spitProjectileSpeed = 10f;
+    [SerializeField] private int spitDamage = 15;
+
     private Transform player;
     private Rigidbody2D rb;
     private float nextAttackTime;
@@ -52,6 +70,7 @@ public class EnemyAI : MonoBehaviour
     private float nextDashTime;
     private float dashTimer;
     private float nextSummonTime;
+    private float nextSpitTime;
     private Vector2 dashDirection;
     private bool isDead;
     private int currentHealth;
@@ -63,11 +82,20 @@ public class EnemyAI : MonoBehaviour
     private float baseKnockbackMass;
     private float currentKnockbackMass;
     private EnemyArchetype currentArchetype;
+    private SpriteRenderer spriteRenderer;
+    private Color originalColor;
+    private Coroutine flashCoroutine;
     private bool runtimeConfigured;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            originalColor = spriteRenderer.color;
+        }
+        
         baseSpeed = speed;
         baseHealth = health;
         baseScoreValue = scoreValue;
@@ -189,6 +217,17 @@ public class EnemyAI : MonoBehaviour
                     summonPrefab = summonSource;
                 }
                 break;
+            case EnemyArchetype.Exploder:
+                speed *= 1.8f; // Очень быстрый
+                health = Mathf.Max(1, Mathf.RoundToInt(health * 0.4f)); // Очень хрупкий
+                scoreValue = Mathf.RoundToInt(scoreValue * 1.5f);
+                break;
+            case EnemyArchetype.Spitter:
+                speed *= 0.9f; // Немного медленнее
+                health = Mathf.Max(1, Mathf.RoundToInt(health * 0.7f));
+                stoppingDistance = spitRange; // Останавливается на дистанции атаки
+                scoreValue = Mathf.RoundToInt(scoreValue * 1.3f);
+                break;
         }
 
         currentHealth = health;
@@ -202,13 +241,120 @@ public class EnemyAI : MonoBehaviour
         }
 
         currentHealth -= damage;
+        StartFlash();
+        SpawnDamagePopup(damage);
 
         if (currentHealth <= 0)
         {
-            isDead = true;
-            GameManager.ReportEnemyKilled(scoreValue);
-            ObjectPoolManager.ReturnToPool(gameObject);
+            Die();
         }
+    }
+
+    private void SpawnDamagePopup(int amount)
+    {
+        if (damagePopupPrefab == null) return;
+
+        GameObject popupObj = Instantiate(damagePopupPrefab, transform.position + Vector3.up, Quaternion.identity);
+        DamagePopup popup = popupObj.GetComponent<DamagePopup>();
+        if (popup != null)
+        {
+            popup.Setup(amount, Color.yellow);
+        }
+    }
+
+    private void StartFlash()
+    {
+        if (flashCoroutine != null) StopCoroutine(flashCoroutine);
+        flashCoroutine = StartCoroutine(FlashRoutine());
+    }
+
+    private IEnumerator FlashRoutine()
+    {
+        if (spriteRenderer == null) yield break;
+        spriteRenderer.color = Color.red; // Вспышка красным
+        yield return new WaitForSeconds(0.1f);
+        spriteRenderer.color = originalColor;
+    }
+
+    private void Die()
+    {
+        if (isDead) return;
+        isDead = true;
+
+        if (currentArchetype == EnemyArchetype.Exploder)
+        {
+            Explode();
+        }
+        else
+        {
+            GameManager.ReportEnemyKilled(scoreValue);
+            StartCoroutine(DeathAnimationRoutine());
+        }
+    }
+
+    private IEnumerator DeathAnimationRoutine()
+    {
+        float duration = 0.4f;
+        float timer = 0f;
+        Vector3 startScale = transform.localScale;
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            float t = timer / duration;
+            
+            // Уменьшаем и делаем прозрачным
+            transform.localScale = Vector3.Lerp(startScale, Vector3.zero, t);
+            if (spriteRenderer != null)
+            {
+                Color c = spriteRenderer.color;
+                c.a = Mathf.Lerp(1f, 0f, t);
+                spriteRenderer.color = c;
+            }
+            
+            yield return null;
+        }
+
+        ObjectPoolManager.ReturnToPool(gameObject);
+        
+        // Сбрасываем для следующего использования из пула
+        transform.localScale = startScale;
+        if (spriteRenderer != null) spriteRenderer.color = originalColor;
+    }
+
+    private void Explode()
+    {
+        // Визуальный эффект
+        if (explosionEffectPrefab != null)
+        {
+            ObjectPoolManager.Spawn(explosionEffectPrefab, transform.position, Quaternion.identity);
+        }
+
+        // Урон игроку, если он в радиусе
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, explosionRadius);
+        foreach (Collider2D hit in colliders)
+        {
+            if (hit.CompareTag("Player"))
+            {
+                PlayerHealth pHealth = hit.GetComponent<PlayerHealth>();
+                if (pHealth != null)
+                {
+                    pHealth.TakeDamage(explosionDamage);
+                    Vector2 dir = (hit.transform.position - transform.position).normalized;
+                    pHealth.ApplyKnockback(dir * 10f);
+                }
+            }
+        }
+
+        GameManager.ReportEnemyKilled(scoreValue);
+        
+        // Тряска камеры при взрыве
+        if (CameraShakeManager.Instance != null)
+        {
+            CameraShakeManager.Instance.ShakeOnHit(); // Используем сильную тряску
+        }
+
+        ObjectPoolManager.ReturnToPool(gameObject);
     }
 
     public void ApplyKnockback(Vector2 force)
@@ -245,6 +391,12 @@ public class EnemyAI : MonoBehaviour
         PlayerHealth playerHealth = collision.gameObject.GetComponent<PlayerHealth>();
         if (playerHealth == null || !playerHealth.CanTakeDamage())
         {
+            return;
+        }
+
+        if (currentArchetype == EnemyArchetype.Exploder)
+        {
+            Explode();
             return;
         }
 
@@ -290,6 +442,31 @@ public class EnemyAI : MonoBehaviour
         {
             nextSummonTime = Time.time + summonCooldown;
             SummonMinions();
+        }
+
+        bool canSpit = currentArchetype == EnemyArchetype.Spitter && spitPrefab != null;
+        if (canSpit && distanceToPlayer <= spitRange + 1f && Time.time >= nextSpitTime)
+        {
+            nextSpitTime = Time.time + (1f / spitRate);
+            Spit(direction);
+        }
+    }
+
+    private void Spit(Vector2 direction)
+    {
+        if (spitPrefab == null) return;
+
+        // 1. Сначала рассчитываем угол
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        
+        // 2. Спавним пулю СРАЗУ с нужным поворотом
+        GameObject projectile = ObjectPoolManager.Spawn(spitPrefab, transform.position, Quaternion.Euler(0, 0, angle));
+        
+        Bullet bulletScript = projectile.GetComponent<Bullet>();
+        if (bulletScript != null)
+        {
+            // 3. Теперь инициализируем (внутри Initialize пуля возьмет уже правильный transform.right)
+            bulletScript.Initialize(spitProjectileSpeed, spitDamage, 2f, true);
         }
     }
 
