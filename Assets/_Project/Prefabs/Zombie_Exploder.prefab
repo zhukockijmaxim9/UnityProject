@@ -184,7 +184,7 @@ MonoBehaviour:
   speed: 2
   health: 100
   scoreValue: 100
-  damageToPlayer: 1
+  damageToPlayer: 0
   attackRate: 1
   playerKnockbackForce: 7
   knockbackTotalTime: 0.12

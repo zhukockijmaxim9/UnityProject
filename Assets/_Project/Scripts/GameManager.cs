@@ -20,8 +20,16 @@ public class GameManager : MonoBehaviour
     private int maxHealth;
     private int currentAmmo;
     private int maxAmmo;
+    
+    [Header("XP System")]
+    public int currentLevel = 1;
+    public int currentXP = 0;
+    public int targetXP = 500;
+    public float xpMultiplier = 1.2f;
+
     private bool waveActive;
     private bool isGameOver;
+    private bool isUpgradeMenuOpen;
     private Coroutine restartCoroutine;
 
     private Canvas hudCanvas;
@@ -112,7 +120,7 @@ public class GameManager : MonoBehaviour
 
     public static bool CanGameplayRun()
     {
-        return !EnsureInstance().isGameOver;
+        return !EnsureInstance().isGameOver && !EnsureInstance().isUpgradeMenuOpen;
     }
 
     public static int GetCurrentWaveNumber()
@@ -159,6 +167,41 @@ public class GameManager : MonoBehaviour
         killCount++;
         aliveEnemies = Mathf.Max(0, aliveEnemies - 1);
         score += pointsAwarded > 0 ? pointsAwarded : defaultPointsPerKill;
+        
+        // Возвращаем динамический опыт (половина от очков)
+        GainXP(pointsAwarded / 2);
+        
+        RefreshHud();
+    }
+
+    private void GainXP(int amount)
+    {
+        currentXP += amount;
+        if (currentXP >= targetXP)
+        {
+            LevelUp();
+        }
+    }
+
+    private void LevelUp()
+    {
+        currentXP -= targetXP;
+        currentLevel++;
+        targetXP = Mathf.RoundToInt(targetXP * xpMultiplier);
+        
+        isUpgradeMenuOpen = true;
+        Time.timeScale = 0f; 
+        
+        if (UpgradeManager.Instance != null)
+        {
+            UpgradeManager.Instance.OpenUpgradeMenu();
+        }
+    }
+
+    public void CloseUpgradeMenu()
+    {
+        isUpgradeMenuOpen = false;
+        Time.timeScale = 1f;
         RefreshHud();
     }
 
@@ -297,12 +340,12 @@ public class GameManager : MonoBehaviour
         waveText.text = $"Wave: {Mathf.Max(1, currentWave)}";
         killsText.text = $"Kills: {killCount}";
         scoreText.text = $"Score: {score:0000}";
-        statusText.text = isGameOver ? "Status: Game Over" : waveActive ? "Status: Wave Active" : "Status: Between Waves";
-        statusText.color = isGameOver
-            ? new Color(1f, 0.45f, 0.45f)
-            : waveActive
-                ? new Color(0.55f, 1f, 0.55f)
-                : new Color(1f, 0.9f, 0.45f);
+        
+        if (statusText != null)
+        {
+            statusText.text = $"LVL: {currentLevel} | XP: {currentXP}/{targetXP}";
+            statusText.color = Color.cyan;
+        }
     }
 
     private IEnumerator RestartCurrentSceneAfterDelay()

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class TopDownCharacterController : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] public float moveSpeed = 5f;
 
     [Header("Dash")]
     [SerializeField] private float dashSpeed = 12f;
@@ -16,7 +16,7 @@ public class TopDownCharacterController : MonoBehaviour
     [Header("Stamina")]
     [SerializeField] private float maxStamina = 100f;
     [SerializeField] private float dashStaminaCost = 30f;
-    [SerializeField] private float staminaRegenRate = 24f;
+    [SerializeField] public float staminaRegenRate = 24f;
     [SerializeField] private float staminaRegenDelay = 0.6f;
     [SerializeField] private Slider staminaSlider;
 
@@ -134,7 +134,7 @@ public class TopDownCharacterController : MonoBehaviour
             return;
         }
 
-        if (playerHealth != null && playerHealth.IsInKnockback())
+        if (playerHealth != null && playerHealth.IsInKnockback)
         {
             return;
         }

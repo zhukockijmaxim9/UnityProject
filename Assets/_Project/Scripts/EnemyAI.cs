@@ -14,7 +14,7 @@ public class EnemyAI : MonoBehaviour
     }
 
     [Header("Archetype")]
-    [SerializeField] private EnemyArchetype startingArchetype = EnemyArchetype.Walker;
+    [SerializeField] public EnemyArchetype startingArchetype = EnemyArchetype.Walker;
     [SerializeField] private float stoppingDistance = 0.6f;
 
     [Header("Movement Settings")]
@@ -73,7 +73,7 @@ public class EnemyAI : MonoBehaviour
     private float nextSpitTime;
     private Vector2 dashDirection;
     private bool isDead;
-    private int currentHealth;
+    public int currentHealth;
     private float baseSpeed;
     private int baseHealth;
     private int baseScoreValue;
@@ -112,6 +112,10 @@ public class EnemyAI : MonoBehaviour
         knockbackCounter = 0f;
         nextKnockbackTime = 0f;
         dashTimer = 0f;
+        
+        // Сбрасываем колайдер при спавне из пула
+        Collider2D coll = GetComponent<Collider2D>();
+        if (coll != null) coll.enabled = true;
     }
 
     private void Start()
@@ -206,11 +210,11 @@ public class EnemyAI : MonoBehaviour
                 break;
 
             case EnemyArchetype.Boss:
-                speed *= 1.15f;
-                health = Mathf.Max(1, Mathf.RoundToInt(health * 3.5f));
-                damageToPlayer += Mathf.Max(1, waveNumber / 3);
-                attackRate = Mathf.Max(0.3f, attackRate * 0.85f);
-                scoreValue = Mathf.RoundToInt(scoreValue * 4f);
+                currentHealth = baseHealth * 10;
+                speed = baseSpeed * 0.5f;
+                damageToPlayer = baseDamageToPlayer * 3;
+                scoreValue = baseScoreValue * 10;
+                currentKnockbackMass = baseKnockbackMass * bossKnockbackMassMultiplier;
 
                 if (summonPrefab == null)
                 {
@@ -218,19 +222,22 @@ public class EnemyAI : MonoBehaviour
                 }
                 break;
             case EnemyArchetype.Exploder:
-                speed *= 1.8f; // Очень быстрый
-                health = Mathf.Max(1, Mathf.RoundToInt(health * 0.4f)); // Очень хрупкий
+                speed *= 1.8f;
+                health = Mathf.Max(1, Mathf.RoundToInt(health * 0.4f));
                 scoreValue = Mathf.RoundToInt(scoreValue * 1.5f);
                 break;
             case EnemyArchetype.Spitter:
-                speed *= 0.9f; // Немного медленнее
+                speed *= 0.9f;
                 health = Mathf.Max(1, Mathf.RoundToInt(health * 0.7f));
-                stoppingDistance = spitRange; // Останавливается на дистанции атаки
+                stoppingDistance = spitRange;
                 scoreValue = Mathf.RoundToInt(scoreValue * 1.3f);
                 break;
         }
 
-        currentHealth = health;
+        if (currentArchetype != EnemyArchetype.Boss)
+        {
+            currentHealth = health;
+        }
     }
 
     public void TakeDamage(int damage)
@@ -271,7 +278,7 @@ public class EnemyAI : MonoBehaviour
     private IEnumerator FlashRoutine()
     {
         if (spriteRenderer == null) yield break;
-        spriteRenderer.color = Color.red; // Вспышка красным
+        spriteRenderer.color = Color.red;
         yield return new WaitForSeconds(0.1f);
         spriteRenderer.color = originalColor;
     }
@@ -280,6 +287,13 @@ public class EnemyAI : MonoBehaviour
     {
         if (isDead) return;
         isDead = true;
+
+        // Отключаем всё лишнее мгновенно
+        Collider2D coll = GetComponent<Collider2D>();
+        if (coll != null) coll.enabled = false;
+        
+        BossHealthBar healthBar = GetComponentInChildren<BossHealthBar>();
+        if (healthBar != null) healthBar.enabled = false;
 
         if (currentArchetype == EnemyArchetype.Exploder)
         {
@@ -303,7 +317,6 @@ public class EnemyAI : MonoBehaviour
             timer += Time.deltaTime;
             float t = timer / duration;
             
-            // Уменьшаем и делаем прозрачным
             transform.localScale = Vector3.Lerp(startScale, Vector3.zero, t);
             if (spriteRenderer != null)
             {
@@ -317,20 +330,17 @@ public class EnemyAI : MonoBehaviour
 
         ObjectPoolManager.ReturnToPool(gameObject);
         
-        // Сбрасываем для следующего использования из пула
         transform.localScale = startScale;
         if (spriteRenderer != null) spriteRenderer.color = originalColor;
     }
 
     private void Explode()
     {
-        // Визуальный эффект
         if (explosionEffectPrefab != null)
         {
             ObjectPoolManager.Spawn(explosionEffectPrefab, transform.position, Quaternion.identity);
         }
 
-        // Урон игроку, если он в радиусе
         Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, explosionRadius);
         foreach (Collider2D hit in colliders)
         {
@@ -348,10 +358,9 @@ public class EnemyAI : MonoBehaviour
 
         GameManager.ReportEnemyKilled(scoreValue);
         
-        // Тряска камеры при взрыве
         if (CameraShakeManager.Instance != null)
         {
-            CameraShakeManager.Instance.ShakeOnHit(); // Используем сильную тряску
+            CameraShakeManager.Instance.ShakeOnHit();
         }
 
         ObjectPoolManager.ReturnToPool(gameObject);
@@ -428,22 +437,47 @@ public class EnemyAI : MonoBehaviour
 
     private void TryUseSpecialAbility(Vector2 direction, float distanceToPlayer)
     {
-        bool canDash = currentArchetype == EnemyArchetype.Dasher || currentArchetype == EnemyArchetype.Boss;
+        HandleDash(direction, distanceToPlayer);
+        HandleSummoning();
+        HandleSpitting(direction, distanceToPlayer);
+    }
+
+    private void HandleDash(Vector2 direction, float distanceToPlayer)
+    {
+        if (currentArchetype == EnemyArchetype.Boss) return;
+        bool canDash = currentArchetype == EnemyArchetype.Dasher;
         if (canDash && distanceToPlayer <= dashTriggerDistance && Time.time >= nextDashTime)
         {
             dashDirection = direction;
             dashTimer = dashDuration;
             nextDashTime = Time.time + dashCooldown;
-            return;
         }
+    }
 
-        bool canSummon = currentArchetype == EnemyArchetype.Boss && summonPrefab != null && summonsPerCycle > 0;
-        if (canSummon && Time.time >= nextSummonTime)
+    private void HandleSummoning()
+    {
+        if (isDead || currentArchetype != EnemyArchetype.Boss || Time.time < nextSummonTime || summonPrefab == null) return;
+
+        nextSummonTime = Time.time + summonCooldown;
+
+        for (int i = 0; i < summonsPerCycle; i++)
         {
-            nextSummonTime = Time.time + summonCooldown;
-            SummonMinions();
+            Vector2 randomOffset = Random.insideUnitCircle * summonRadius;
+            Vector2 spawnPos = (Vector2)transform.position + randomOffset;
+            
+            GameObject summoned = Instantiate(summonPrefab, spawnPos, Quaternion.identity);
+            EnemyAI summonedAI = summoned.GetComponent<EnemyAI>();
+            if (summonedAI != null)
+            {
+                summonedAI.ConfigureForWave(EnemyArchetype.Exploder, GameManager.Instance != null ? GameManager.Instance.currentLevel : 1);
+            }
         }
+        
+        Debug.Log("BOSS SUMMONED KAMIKAZES!");
+    }
 
+    private void HandleSpitting(Vector2 direction, float distanceToPlayer)
+    {
         bool canSpit = currentArchetype == EnemyArchetype.Spitter && spitPrefab != null;
         if (canSpit && distanceToPlayer <= spitRange + 1f && Time.time >= nextSpitTime)
         {
@@ -456,33 +490,14 @@ public class EnemyAI : MonoBehaviour
     {
         if (spitPrefab == null) return;
 
-        // 1. Сначала рассчитываем угол
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         
-        // 2. Спавним пулю СРАЗУ с нужным поворотом
         GameObject projectile = ObjectPoolManager.Spawn(spitPrefab, transform.position, Quaternion.Euler(0, 0, angle));
         
         Bullet bulletScript = projectile.GetComponent<Bullet>();
         if (bulletScript != null)
         {
-            // 3. Теперь инициализируем (внутри Initialize пуля возьмет уже правильный transform.right)
             bulletScript.Initialize(spitProjectileSpeed, spitDamage, 2f, true);
-        }
-    }
-
-    private void SummonMinions()
-    {
-        int currentWaveNumber = Mathf.Max(1, GameManager.GetCurrentWaveNumber());
-
-        for (int i = 0; i < summonsPerCycle; i++)
-        {
-            Vector2 offset = Random.insideUnitCircle * summonRadius;
-            GameObject spawnedMinion = ObjectPoolManager.Spawn(summonPrefab, transform.position + (Vector3)offset, Quaternion.identity);
-            EnemyAI minion = spawnedMinion.GetComponent<EnemyAI>();
-            if (minion != null)
-            {
-                minion.ConfigureForWave(EnemyArchetype.Walker, currentWaveNumber);
-            }
         }
     }
 

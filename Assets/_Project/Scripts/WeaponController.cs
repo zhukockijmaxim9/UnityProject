@@ -24,6 +24,7 @@ public class WeaponController : MonoBehaviour
 
     private WeaponDefinition currentDefinition;
     private int currentWeaponIndex = -1;
+    private bool[] unlockedWeapons;
     private float nextShotTime;
     private float reloadTimer;
     private int currentDamage;
@@ -36,6 +37,7 @@ public class WeaponController : MonoBehaviour
     private float currentSpreadAngle;
     private int currentAmmo;
     private bool isReloading;
+    private int extraDamage = 0; // Наш бонус от апгрейдов
 
     public string CurrentWeaponName => currentDefinition != null ? currentDefinition.weaponName : fallbackWeaponName;
     public int CurrentAmmo => currentAmmo;
@@ -69,6 +71,11 @@ public class WeaponController : MonoBehaviour
 
     private void Awake()
     {
+        if (availableWeapons != null)
+        {
+            unlockedWeapons = new bool[availableWeapons.Length];
+            if (unlockedWeapons.Length > 0) unlockedWeapons[0] = true; // Пистолет открыт сразу
+        }
         EquipStartingWeapon();
     }
 
@@ -177,7 +184,9 @@ public class WeaponController : MonoBehaviour
 
     public void ModifyDamage(int delta)
     {
-        currentDamage = Mathf.Max(1, currentDamage + delta);
+        extraDamage += delta;
+        currentDamage += delta;
+        Debug.Log("DAMAGE UPGRADED! Current bonus: +" + extraDamage + " | Total Damage: " + currentDamage);
     }
 
     public void MultiplyFireRate(float multiplier)
@@ -199,6 +208,27 @@ public class WeaponController : MonoBehaviour
     public void ModifyProjectileCount(int delta)
     {
         currentProjectilesPerShot = Mathf.Max(1, currentProjectilesPerShot + delta);
+    }
+
+    public void UnlockNextWeapon()
+    {
+        if (availableWeapons == null || unlockedWeapons == null) return;
+        for (int i = 0; i < unlockedWeapons.Length; i++)
+        {
+            if (!unlockedWeapons[i])
+            {
+                unlockedWeapons[i] = true;
+                EquipWeapon(i); 
+                Debug.Log("Unlocked and Equipped: " + availableWeapons[i].weaponName);
+                break;
+            }
+        }
+    }
+
+    public bool IsWeaponUnlocked(int index)
+    {
+        if (unlockedWeapons == null || index < 0 || index >= unlockedWeapons.Length) return false;
+        return unlockedWeapons[index];
     }
 
     private void EquipStartingWeapon()
@@ -231,7 +261,7 @@ public class WeaponController : MonoBehaviour
         currentWeaponIndex = weaponIndex;
         fallbackWeaponName = string.IsNullOrWhiteSpace(definition.weaponName) ? fallbackWeaponName : definition.weaponName;
         fallbackBulletPrefab = definition.bulletPrefab != null ? definition.bulletPrefab : fallbackBulletPrefab;
-        currentDamage = Mathf.Max(1, definition.damage);
+        currentDamage = Mathf.Max(1, definition.damage + extraDamage);
         currentFireRate = Mathf.Max(0.1f, definition.fireRate);
         currentProjectileSpeed = Mathf.Max(0.1f, definition.projectileSpeed);
         currentProjectileKnockback = Mathf.Max(0f, definition.projectileKnockback);
@@ -248,7 +278,7 @@ public class WeaponController : MonoBehaviour
     {
         currentDefinition = null;
         currentWeaponIndex = -1;
-        currentDamage = Mathf.Max(1, fallbackDamage);
+        currentDamage = Mathf.Max(1, fallbackDamage + extraDamage);
         currentFireRate = Mathf.Max(0.1f, fallbackFireRate);
         currentProjectileSpeed = Mathf.Max(0.1f, fallbackProjectileSpeed);
         currentProjectileKnockback = Mathf.Max(0f, fallbackProjectileKnockback);

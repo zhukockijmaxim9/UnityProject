@@ -66,11 +66,6 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
-        if (player == null)
-        {
-            ResolvePlayer();
-        }
-
         if (player == null || isSpawning)
         {
             return;
@@ -257,8 +252,8 @@ public class EnemySpawner : MonoBehaviour
                     wave.spawns.Add(new SpawnInstruction
                     {
                         archetype = EnemyAI.EnemyArchetype.Boss,
-                        amount = 1,
-                        interval = 0.75f,
+                        amount = tier,
+                        interval = 1.2f,
                         prefabOverride = bossPrefab
                     });
                 }

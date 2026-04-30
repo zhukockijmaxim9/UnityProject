@@ -3,9 +3,12 @@ using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
 {
-    [Header("Health Settings")]
+    [Header("Stats")]
     public int maxHealth = 100;
-    [SerializeField] private float damageInvulnerabilityTime = 0.5f;
+    private int currentHealth;
+    private bool isDead;
+    public bool IsDead => isDead;
+    public bool IsInKnockback => knockbackCounter > 0;
 
     [Header("UI References")]
     public Slider healthSlider;
@@ -13,15 +16,12 @@ public class PlayerHealth : MonoBehaviour
 
     [Header("Knockback Settings")]
     public float knockbackTotalTime = 0.2f;
-
-    private int currentHealth;
-    private float damageInvulnerabilityCounter;
     private float knockbackCounter;
-    private bool isDead;
     private Rigidbody2D rb;
 
-    public int CurrentHealth => currentHealth;
-    public bool IsDead => isDead;
+    [Header("Invulnerability")]
+    public float damageInvulnerabilityTime = 0.5f;
+    private float damageInvulnerabilityCounter;
 
     private void Awake()
     {
@@ -37,28 +37,25 @@ public class PlayerHealth : MonoBehaviour
 
     private void Update()
     {
-        if (knockbackCounter > 0f)
-        {
-            knockbackCounter -= Time.deltaTime;
-        }
-
-        if (damageInvulnerabilityCounter > 0f)
+        if (damageInvulnerabilityCounter > 0)
         {
             damageInvulnerabilityCounter -= Time.deltaTime;
+        }
+
+        if (knockbackCounter > 0)
+        {
+            knockbackCounter -= Time.deltaTime;
         }
     }
 
     public bool CanTakeDamage()
     {
-        return !isDead && damageInvulnerabilityCounter <= 0f && GameManager.CanGameplayRun();
+        return !isDead && damageInvulnerabilityCounter <= 0;
     }
 
     public void TakeDamage(int damage)
     {
-        if (damage <= 0 || !CanTakeDamage())
-        {
-            return;
-        }
+        if (!CanTakeDamage()) return;
 
         currentHealth = Mathf.Max(0, currentHealth - damage);
         damageInvulnerabilityCounter = damageInvulnerabilityTime;
@@ -73,59 +70,39 @@ public class PlayerHealth : MonoBehaviour
 
         if (currentHealth <= 0)
         {
-            Die();
+            HandleDeath();
         }
     }
 
-    public void ApplyKnockback(Vector2 force)
+    public void ApplyKnockback(Vector2 direction)
     {
-        if (isDead)
-        {
-            return;
-        }
-
+        if (isDead) return;
         knockbackCounter = knockbackTotalTime;
-        rb.linearVelocity = Vector2.zero;
-        rb.AddForce(force, ForceMode2D.Impulse);
-    }
-
-    public bool IsInKnockback()
-    {
-        return knockbackCounter > 0f;
+        rb.linearVelocity = direction;
     }
 
     public void Heal(int amount)
     {
-        if (amount <= 0 || isDead)
-        {
-            return;
-        }
-
-        currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
+        if (isDead) return;
+        currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
         UpdateHealthUi();
         GameManager.ReportPlayerHealth(currentHealth, maxHealth);
     }
 
-    public void IncreaseMaxHealth(int amount, bool healToFull = false)
+    public void IncreaseMaxHealth(int amount, bool heal)
     {
-        if (amount <= 0)
-        {
-            return;
-        }
-
         maxHealth += amount;
-        currentHealth = healToFull ? maxHealth : Mathf.Min(currentHealth + amount, maxHealth);
+        if (heal)
+        {
+            currentHealth += amount;
+        }
         UpdateHealthUi();
         GameManager.ReportPlayerHealth(currentHealth, maxHealth);
     }
 
-    private void Die()
+    private void HandleDeath()
     {
-        if (isDead)
-        {
-            return;
-        }
-
+        if (isDead) return;
         isDead = true;
         currentHealth = 0;
         rb.linearVelocity = Vector2.zero;
@@ -136,11 +113,7 @@ public class PlayerHealth : MonoBehaviour
 
     private void UpdateHealthUi()
     {
-        if (healthSlider == null)
-        {
-            return;
-        }
-
+        if (healthSlider == null) return;
         healthSlider.maxValue = maxHealth;
         healthSlider.value = currentHealth;
     }
