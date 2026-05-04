@@ -260,10 +260,6 @@ public class EnemyAI : MonoBehaviour
                 break;
 
             case EnemyArchetype.Boss:
-                currentHealth = baseHealth * 10;
-                speed = baseSpeed * 0.5f;
-                damageToPlayer = baseDamageToPlayer * 3;
-                scoreValue = baseScoreValue * 10;
                 currentKnockbackMass = baseKnockbackMass * bossKnockbackMassMultiplier;
 
                 if (summonPrefab == null)
@@ -284,10 +280,7 @@ public class EnemyAI : MonoBehaviour
                 break;
         }
 
-        if (currentArchetype != EnemyArchetype.Boss)
-        {
-            currentHealth = health;
-        }
+        currentHealth = health;
     }
 
     public void TakeDamage(int damage)
@@ -342,8 +335,7 @@ public class EnemyAI : MonoBehaviour
         Collider2D coll = GetComponent<Collider2D>();
         if (coll != null) coll.enabled = false;
         
-        BossHealthBar healthBar = GetComponentInChildren<BossHealthBar>();
-        if (healthBar != null) healthBar.enabled = false;
+        // Удалена ссылка на BossHealthBar
 
         if (currentArchetype == EnemyArchetype.Exploder)
         {
