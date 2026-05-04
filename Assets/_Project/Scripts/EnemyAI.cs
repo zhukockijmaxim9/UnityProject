@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class EnemyAI : MonoBehaviour
 {
@@ -19,6 +20,7 @@ public class EnemyAI : MonoBehaviour
 
     [Header("Movement Settings")]
     public float speed = 2f;
+    [SerializeField] private float pathUpdateDelay = 0.2f;
 
     [Header("Health & Combat")]
     public int health = 100;
@@ -87,6 +89,10 @@ public class EnemyAI : MonoBehaviour
     private Coroutine flashCoroutine;
     private bool runtimeConfigured;
 
+    private List<Vector2> currentPath;
+    private float pathUpdateTimer;
+    private int currentPathIndex;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -95,6 +101,7 @@ public class EnemyAI : MonoBehaviour
         {
             originalColor = spriteRenderer.color;
         }
+
         
         baseSpeed = speed;
         baseHealth = health;
@@ -157,9 +164,52 @@ public class EnemyAI : MonoBehaviour
 
         Vector2 toPlayer = player.position - transform.position;
         float distanceToPlayer = toPlayer.magnitude;
-        Vector2 direction = distanceToPlayer > 0.001f ? toPlayer / distanceToPlayer : Vector2.zero;
+        Vector2 lookingDirection = distanceToPlayer > 0.001f ? toPlayer / distanceToPlayer : Vector2.zero;
 
-        TryUseSpecialAbility(direction, distanceToPlayer);
+        // --- PATHFINDING (A*) ---
+        pathUpdateTimer -= Time.fixedDeltaTime;
+        if (pathUpdateTimer <= 0f)
+        {
+            pathUpdateTimer = pathUpdateDelay + Random.Range(-0.05f, 0.05f);
+
+            if (Pathfinding2D.Instance != null)
+            {
+                currentPath = Pathfinding2D.Instance.FindPath(transform.position, player.position);
+                currentPathIndex = 1; // 0 — это наша текущая позиция
+            }
+            else
+            {
+                currentPath = null;
+            }
+        }
+
+        Vector2 movementDirection = Vector2.zero;
+
+        if (currentPath != null && currentPath.Count > currentPathIndex)
+        {
+            Vector2 toWaypoint = currentPath[currentPathIndex] - (Vector2)transform.position;
+
+            if (toWaypoint.sqrMagnitude < 0.15f)
+            {
+                currentPathIndex++;
+                if (currentPath.Count > currentPathIndex)
+                {
+                    toWaypoint = currentPath[currentPathIndex] - (Vector2)transform.position;
+                    movementDirection = toWaypoint.normalized;
+                }
+            }
+            else
+            {
+                movementDirection = toWaypoint.normalized;
+            }
+        }
+        else
+        {
+            // Фолбэк: если путь не найден — идём напрямую
+            movementDirection = lookingDirection;
+        }
+
+        TryUseSpecialAbility(lookingDirection, distanceToPlayer);
         if (dashTimer > 0f)
         {
             return;
@@ -171,10 +221,10 @@ public class EnemyAI : MonoBehaviour
         }
         else
         {
-            rb.linearVelocity = direction * speed;
+            rb.linearVelocity = movementDirection * speed;
         }
 
-        RotateTowards(direction);
+        RotateTowards(lookingDirection);
     }
 
     public void ConfigureForWave(EnemyArchetype archetype, int waveNumber, GameObject summonSource = null)
