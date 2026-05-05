@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 3916822069628899869}
   - component: {fileID: 7555251580366276561}
   - component: {fileID: 95331842295891}
-  - component: {fileID: 6821445357432995493}
+  - component: {fileID: -8142413027912558432}
   m_Layer: 0
-  m_Name: Zombie
+  m_Name: Dasher
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -167,7 +167,7 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.45, y: 0.45}
   m_EdgeRadius: 0
---- !u!114 &6821445357432995493
+--- !u!114 &-8142413027912558432
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -176,9 +176,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 6099850138208741684}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f07716b9f15e0e4ba97642ad4d9ba85, type: 3}
+  m_Script: {fileID: 11500000, guid: 85a0ec5d89d1de94e94204abc302ba90, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WalkerEnemy
+  m_EditorClassIdentifier: Assembly-CSharp::DasherEnemy
   speed: 2
   stoppingDistance: 0.6
   health: 100
@@ -189,5 +189,9 @@ MonoBehaviour:
   knockbackTotalTime: 0.2
   knockbackRepeatDelay: 0.1
   knockbackMass: 1
-  damagePopupPrefab: {fileID: 2178480866258582282, guid: 88cb758318f900045be4b0ae9781b3a4, type: 3}
+  damagePopupPrefab: {fileID: 0}
   currentHealth: 0
+  dashSpeed: 7.5
+  dashDuration: 0.35
+  dashCooldown: 2.75
+  dashTriggerDistance: 6

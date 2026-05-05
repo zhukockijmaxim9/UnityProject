@@ -7828,10 +7828,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawner
   enemyPrefab: {fileID: 6099850138208741684, guid: f19c2b75b60d2084e9b5e8d9b0964be0, type: 3}
+  dasherPrefab: {fileID: 6099850138208741684, guid: 8b56f20cbd93843408c67f078f74744a, type: 3}
   bossPrefab: {fileID: 6099850138208741684, guid: 750a40e98ac5a81479c5e0a325ff3d55, type: 3}
   exploderPrefab: {fileID: 6099850138208741684, guid: 4c73465e9310ac946b86e840e8a9747a, type: 3}
   spitterPrefab: {fileID: 6099850138208741684, guid: ee053b93a7c6e6a4fafff294982b2378, type: 3}
-  player: {fileID: 0}
+  player: {fileID: 1202789471}
   minSpawnDistance: 14
   maxSpawnDistance: 15
   baseSpawnRate: 2

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3916822069628899869}
   - component: {fileID: 7555251580366276561}
   - component: {fileID: 95331842295891}
-  - component: {fileID: 670644290802326490}
+  - component: {fileID: 2580689932979743186}
   m_Layer: 0
   m_Name: ZombieBoss
   m_TagString: Enemy
@@ -167,7 +167,7 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.45, y: 0.45}
   m_EdgeRadius: 0
---- !u!114 &670644290802326490
+--- !u!114 &2580689932979743186
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -176,39 +176,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 6099850138208741684}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f0a1d209af3354a449ff6c93385391b7, type: 3}
+  m_Script: {fileID: 11500000, guid: 7bdae4f4b795afe42800142b0c732b55, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyAI
-  startingArchetype: 0
-  stoppingDistance: 0.6
+  m_EditorClassIdentifier: Assembly-CSharp::BossEnemy
   speed: 2
-  pathUpdateDelay: 0.2
-  health: 1000
+  stoppingDistance: 0.6
+  health: 100
   scoreValue: 100
-  damageToPlayer: 20
+  damageToPlayer: 1
   attackRate: 1
   playerKnockbackForce: 7
-  knockbackTotalTime: 0.12
+  knockbackTotalTime: 0.2
   knockbackRepeatDelay: 0.1
   knockbackMass: 1
-  dasherKnockbackMassMultiplier: 0.85
-  bruiserKnockbackMassMultiplier: 1.75
-  bossKnockbackMassMultiplier: 3
-  dashSpeed: 7.5
-  dashDuration: 0.35
-  dashCooldown: 2.75
-  dashTriggerDistance: 6
-  summonPrefab: {fileID: 6099850138208741684, guid: f19c2b75b60d2084e9b5e8d9b0964be0, type: 3}
-  summonsPerCycle: 2
-  summonCooldown: 7
-  summonRadius: 1.5
-  explosionRadius: 3.5
-  explosionDamage: 20
   damagePopupPrefab: {fileID: 2178480866258582282, guid: 88cb758318f900045be4b0ae9781b3a4, type: 3}
-  explosionEffectPrefab: {fileID: 4502321048490451571, guid: 46464387c2c8bec40b5e73197a5e978f, type: 3}
-  spitPrefab: {fileID: 0}
-  spitRange: 7
-  spitRate: 2
-  spitProjectileSpeed: 10
-  spitDamage: 15
   currentHealth: 0
+  summonPrefab: {fileID: 6099850138208741684, guid: 8b56f20cbd93843408c67f078f74744a, type: 3}
+  summonsPerCycle: 2
+  summonCooldown: 10
+  summonRadius: 1.5
+  bossKnockbackMassMultiplier: 3

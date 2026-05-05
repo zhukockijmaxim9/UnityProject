@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3916822069628899869}
   - component: {fileID: 7555251580366276561}
   - component: {fileID: 95331842295891}
-  - component: {fileID: 670644290802326490}
+  - component: {fileID: 7321301788633151346}
   m_Layer: 0
   m_Name: Zombie_Spitter
   m_TagString: Enemy
@@ -167,7 +167,7 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.45, y: 0.45}
   m_EdgeRadius: 0
---- !u!114 &670644290802326490
+--- !u!114 &7321301788633151346
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -176,37 +176,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 6099850138208741684}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f0a1d209af3354a449ff6c93385391b7, type: 3}
+  m_Script: {fileID: 11500000, guid: 5eec1fa2bb4cf2c4d886e081b8ce3dc7, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyAI
-  startingArchetype: 5
-  stoppingDistance: 0.6
+  m_EditorClassIdentifier: Assembly-CSharp::SpitterEnemy
   speed: 2
-  health: 60
+  stoppingDistance: 0.6
+  health: 100
   scoreValue: 100
-  damageToPlayer: 10
+  damageToPlayer: 1
   attackRate: 1
   playerKnockbackForce: 7
-  knockbackTotalTime: 0.12
+  knockbackTotalTime: 0.2
   knockbackRepeatDelay: 0.1
   knockbackMass: 1
-  dasherKnockbackMassMultiplier: 0.85
-  bruiserKnockbackMassMultiplier: 1.75
-  bossKnockbackMassMultiplier: 3
-  dashSpeed: 7.5
-  dashDuration: 0.35
-  dashCooldown: 2.75
-  dashTriggerDistance: 6
-  summonPrefab: {fileID: 0}
-  summonsPerCycle: 2
-  summonCooldown: 7
-  summonRadius: 1.5
-  explosionRadius: 3.5
-  explosionDamage: 40
-  damagePopupPrefab: {fileID: 2178480866258582282, guid: 88cb758318f900045be4b0ae9781b3a4, type: 3}
-  explosionEffectPrefab: {fileID: 0}
-  spitPrefab: {fileID: 3742799303467310150, guid: 969ea9fa4ea3cb246ad8df75141a46ef, type: 3}
+  damagePopupPrefab: {fileID: 0}
+  currentHealth: 0
+  spitPrefab: {fileID: 0}
   spitRange: 7
-  spitRate: 1
+  spitRate: 2
   spitProjectileSpeed: 10
-  spitDamage: 12
+  spitDamage: 15

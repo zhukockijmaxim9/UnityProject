@@ -5,10 +5,19 @@ using UnityEngine.Serialization;
 
 public class EnemySpawner : MonoBehaviour
 {
+    public enum EnemyType
+    {
+        Walker,
+        Dasher,
+        Spitter,
+        Exploder,
+        Boss
+    }
+
     [System.Serializable]
     public class SpawnInstruction
     {
-        public EnemyAI.EnemyArchetype archetype = EnemyAI.EnemyArchetype.Walker;
+        public EnemyType type = EnemyType.Walker;
         public int amount = 5;
         public float interval = 0.6f;
         public GameObject prefabOverride;
@@ -24,6 +33,7 @@ public class EnemySpawner : MonoBehaviour
 
     [Header("Prefabs")]
     public GameObject enemyPrefab;
+    public GameObject dasherPrefab;
     public GameObject bossPrefab;
     public GameObject exploderPrefab;
     public GameObject spitterPrefab;
@@ -31,9 +41,7 @@ public class EnemySpawner : MonoBehaviour
     [Header("Spawn Settings")]
     public Transform player;
     public float minSpawnDistance = 14f;
-    [FormerlySerializedAs("spawnDistance")]
     public float maxSpawnDistance = 18f;
-    [FormerlySerializedAs("spawnRate")]
     public float baseSpawnRate = 2.0f;
     [SerializeField] private float timeBetweenWaves = 2.5f;
     [SerializeField] private bool useGeneratedWaves = true;
@@ -61,15 +69,9 @@ public class EnemySpawner : MonoBehaviour
 
     private void Update()
     {
-        if (!GameManager.CanGameplayRun())
-        {
-            return;
-        }
+        if (!GameManager.CanGameplayRun()) return;
 
-        if (player == null || isSpawning)
-        {
-            return;
-        }
+        if (player == null || isSpawning) return;
 
         bool arenaIsClear = GameManager.GetAliveEnemies() <= 0;
         if (arenaIsClear)
@@ -79,7 +81,6 @@ public class EnemySpawner : MonoBehaviour
                 waitingForNextWave = true;
                 nextWaveStartTime = Time.time + timeBetweenWaves;
                 GameManager.ReportWaveState(false);
-                Debug.Log($"Wave {currentWave} cleared. Preparing next wave...");
             }
 
             if (Time.time >= nextWaveStartTime)
@@ -103,7 +104,6 @@ public class EnemySpawner : MonoBehaviour
         GameManager.ReportWave(currentWave);
         GameManager.ReportWaveState(true);
 
-        Debug.Log($"<color=cyan>=== {wave.label} STARTED ===</color>");
         yield return new WaitForSeconds(wave.startDelay);
 
         for (int i = 0; i < wave.spawns.Count; i++)
@@ -111,23 +111,19 @@ public class EnemySpawner : MonoBehaviour
             SpawnInstruction instruction = wave.spawns[i];
             for (int j = 0; j < instruction.amount; j++)
             {
-                SpawnEnemy(instruction, j + 1);
+                SpawnEnemy(instruction);
                 yield return new WaitForSeconds(Mathf.Max(0.05f, instruction.interval));
             }
         }
 
         isSpawning = false;
         waitingForNextWave = false;
-        Debug.Log($"<color=orange>Wave {currentWave} deployed. Survive the assault.</color>");
     }
 
-    private void SpawnEnemy(SpawnInstruction instruction, int spawnIndex)
+    private void SpawnEnemy(SpawnInstruction instruction)
     {
         GameObject prefab = ResolvePrefab(instruction);
-        if (player == null || prefab == null)
-        {
-            return;
-        }
+        if (player == null || prefab == null) return;
 
         Vector2 randomDir = Random.insideUnitCircle.normalized;
         float randomDist = Random.Range(minSpawnDistance, maxSpawnDistance);
@@ -141,10 +137,8 @@ public class EnemySpawner : MonoBehaviour
         EnemyAI enemy = spawnedEnemy.GetComponent<EnemyAI>();
         if (enemy != null)
         {
-            enemy.ConfigureForWave(instruction.archetype, currentWave, enemyPrefab);
+            enemy.ConfigureForWave(currentWave);
         }
-
-        Debug.Log($"[Spawner]: {instruction.archetype} #{spawnIndex} spawned.");
     }
 
     private WaveDefinition GetWaveDefinition(int waveNumber)
@@ -172,147 +166,30 @@ public class EnemySpawner : MonoBehaviour
         switch ((waveNumber - 1) % 4)
         {
             case 0:
-                wave.label = $"Wave {waveNumber}: Swarm";
-                wave.spawns.Add(new SpawnInstruction
-                {
-                    archetype = EnemyAI.EnemyArchetype.Walker,
-                    amount = 5 + (tier * 3),
-                    interval = walkerInterval
-                });
-                if (tier > 1)
-                {
-                    wave.spawns.Add(new SpawnInstruction
-                    {
-                        archetype = EnemyAI.EnemyArchetype.Dasher,
-                        amount = tier - 1,
-                        interval = specialInterval
-                    });
-                }
-                if (waveNumber >= 2)
-                {
-                    wave.spawns.Add(new SpawnInstruction
-                    {
-                        archetype = EnemyAI.EnemyArchetype.Spitter,
-                        amount = (waveNumber - 1) / 2,
-                        interval = specialInterval
-                    });
-                    wave.spawns.Add(new SpawnInstruction
-                    {
-                        archetype = EnemyAI.EnemyArchetype.Exploder,
-                        amount = (waveNumber - 1) / 2,
-                        interval = specialInterval + 0.2f
-                    });
-                }
+                wave.spawns.Add(new SpawnInstruction { type = EnemyType.Walker, amount = 5 + (tier * 3), interval = walkerInterval });
+                if (tier > 1) wave.spawns.Add(new SpawnInstruction { type = EnemyType.Dasher, amount = tier - 1, interval = specialInterval });
                 break;
 
             case 1:
-                wave.label = $"Wave {waveNumber}: Hunter Pack";
-                wave.spawns.Add(new SpawnInstruction
-                {
-                    archetype = EnemyAI.EnemyArchetype.Walker,
-                    amount = 4 + (tier * 2),
-                    interval = walkerInterval
-                });
-                wave.spawns.Add(new SpawnInstruction
-                {
-                    archetype = EnemyAI.EnemyArchetype.Dasher,
-                    amount = 1 + tier,
-                    interval = specialInterval
-                });
-                wave.spawns.Add(new SpawnInstruction
-                {
-                    archetype = EnemyAI.EnemyArchetype.Spitter,
-                    amount = waveNumber - 1,
-                    interval = specialInterval * 1.5f
-                });
-                wave.spawns.Add(new SpawnInstruction
-                {
-                    archetype = EnemyAI.EnemyArchetype.Exploder,
-                    amount = waveNumber - 1,
-                    interval = specialInterval * 1.8f
-                });
+                wave.spawns.Add(new SpawnInstruction { type = EnemyType.Walker, amount = 4 + (tier * 2), interval = walkerInterval });
+                wave.spawns.Add(new SpawnInstruction { type = EnemyType.Dasher, amount = 1 + tier, interval = specialInterval });
                 break;
 
             case 2:
-                wave.label = $"Wave {waveNumber}: Boss Pressure";
-                wave.spawns.Add(new SpawnInstruction
-                {
-                    archetype = EnemyAI.EnemyArchetype.Walker,
-                    amount = 3 + (tier * 2),
-                    interval = walkerInterval
-                });
-                wave.spawns.Add(new SpawnInstruction
-                {
-                    archetype = EnemyAI.EnemyArchetype.Dasher,
-                    amount = Mathf.Max(1, tier),
-                    interval = specialInterval
-                });
-                if (bossPrefab != null)
-                {
-                    wave.spawns.Add(new SpawnInstruction
-                    {
-                        archetype = EnemyAI.EnemyArchetype.Boss,
-                        amount = tier,
-                        interval = 1.2f,
-                        prefabOverride = bossPrefab
-                    });
-                }
-                if (waveNumber >= 2)
-                {
-                    wave.spawns.Add(new SpawnInstruction
-                    {
-                        archetype = EnemyAI.EnemyArchetype.Spitter,
-                        amount = 1,
-                        interval = specialInterval
-                    });
-                    wave.spawns.Add(new SpawnInstruction
-                    {
-                        archetype = EnemyAI.EnemyArchetype.Exploder,
-                        amount = 1,
-                        interval = specialInterval + 0.5f
-                    });
-                }
+                wave.spawns.Add(new SpawnInstruction { type = EnemyType.Walker, amount = 3 + (tier * 2), interval = walkerInterval });
+                if (bossPrefab != null) wave.spawns.Add(new SpawnInstruction { type = EnemyType.Boss, amount = tier, interval = 1.2f, prefabOverride = bossPrefab });
                 break;
 
             default:
-                wave.label = $"Wave {waveNumber}: Bruiser Push";
-                wave.spawns.Add(new SpawnInstruction
-                {
-                    archetype = EnemyAI.EnemyArchetype.Walker,
-                    amount = 4 + (tier * 2),
-                    interval = walkerInterval
-                });
-                wave.spawns.Add(new SpawnInstruction
-                {
-                    archetype = EnemyAI.EnemyArchetype.Bruiser,
-                    amount = 1 + tier,
-                    interval = specialInterval
-                });
-                if (waveNumber >= 2)
-                {
-                    wave.spawns.Add(new SpawnInstruction
-                    {
-                        archetype = EnemyAI.EnemyArchetype.Spitter,
-                        amount = waveNumber / 2,
-                        interval = specialInterval + 0.5f
-                    });
-                    wave.spawns.Add(new SpawnInstruction
-                    {
-                        archetype = EnemyAI.EnemyArchetype.Exploder,
-                        amount = waveNumber / 3,
-                        interval = specialInterval + 0.7f
-                    });
-                }
-                if (tier >= 2)
-                {
-                    wave.spawns.Add(new SpawnInstruction
-                    {
-                        archetype = EnemyAI.EnemyArchetype.Dasher,
-                        amount = 1 + (tier / 2),
-                        interval = specialInterval
-                    });
-                }
+                wave.spawns.Add(new SpawnInstruction { type = EnemyType.Walker, amount = 6 + tier, interval = walkerInterval });
+                wave.spawns.Add(new SpawnInstruction { type = EnemyType.Exploder, amount = tier, interval = specialInterval });
                 break;
+        }
+
+        // Add some variety based on wave number
+        if (waveNumber >= 3)
+        {
+            wave.spawns.Add(new SpawnInstruction { type = EnemyType.Spitter, amount = tier, interval = specialInterval });
         }
 
         return wave;
@@ -320,40 +197,22 @@ public class EnemySpawner : MonoBehaviour
 
     private GameObject ResolvePrefab(SpawnInstruction instruction)
     {
-        if (instruction.prefabOverride != null)
-        {
-            return instruction.prefabOverride;
-        }
+        if (instruction.prefabOverride != null) return instruction.prefabOverride;
 
-        if (instruction.archetype == EnemyAI.EnemyArchetype.Boss && bossPrefab != null)
+        switch (instruction.type)
         {
-            return bossPrefab;
+            case EnemyType.Dasher: return dasherPrefab != null ? dasherPrefab : enemyPrefab;
+            case EnemyType.Boss: return bossPrefab != null ? bossPrefab : enemyPrefab;
+            case EnemyType.Exploder: return exploderPrefab != null ? exploderPrefab : enemyPrefab;
+            case EnemyType.Spitter: return spitterPrefab != null ? spitterPrefab : enemyPrefab;
+            default: return enemyPrefab;
         }
-
-        if (instruction.archetype == EnemyAI.EnemyArchetype.Exploder && exploderPrefab != null)
-        {
-            return exploderPrefab;
-        }
-
-        if (instruction.archetype == EnemyAI.EnemyArchetype.Spitter && spitterPrefab != null)
-        {
-            return spitterPrefab;
-        }
-
-        return enemyPrefab;
     }
 
     private void ResolvePlayer()
     {
-        if (player != null)
-        {
-            return;
-        }
-
+        if (player != null) return;
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-        if (playerObject != null)
-        {
-            player = playerObject.transform;
-        }
+        if (playerObject != null) player = playerObject.transform;
     }
 }
