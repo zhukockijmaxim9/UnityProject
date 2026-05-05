@@ -49,7 +49,7 @@ public class ExploderEnemy : EnemyAI
     {
         if (explosionEffectPrefab != null)
         {
-            ObjectPoolManager.Spawn(explosionEffectPrefab, transform.position, Quaternion.identity);
+            Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
         }
 
         Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, explosionRadius);
@@ -74,7 +74,7 @@ public class ExploderEnemy : EnemyAI
             CameraShakeManager.Instance.ShakeOnHit();
         }
 
-        ObjectPoolManager.ReturnToPool(gameObject);
+        Destroy(gameObject);
     }
 
     protected override void OnCollisionStay2D(Collision2D collision)

@@ -184,9 +184,7 @@ public abstract class EnemyAI : MonoBehaviour
             yield return null;
         }
 
-        ObjectPoolManager.ReturnToPool(gameObject);
-        transform.localScale = startScale;
-        if (spriteRenderer != null) spriteRenderer.color = originalColor;
+        Destroy(gameObject);
     }
 
     public virtual void ApplyKnockback(Vector2 force)

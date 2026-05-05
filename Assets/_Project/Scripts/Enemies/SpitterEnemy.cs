@@ -55,7 +55,7 @@ public class SpitterEnemy : EnemyAI
         if (spitPrefab == null) return;
 
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-        GameObject projectile = ObjectPoolManager.Spawn(spitPrefab, transform.position, Quaternion.Euler(0, 0, angle));
+        GameObject projectile = Instantiate(spitPrefab, transform.position, Quaternion.Euler(0, 0, angle));
         
         Bullet bulletScript = projectile.GetComponent<Bullet>();
         if (bulletScript != null)

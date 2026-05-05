@@ -133,7 +133,7 @@ public class EnemySpawner : MonoBehaviour
             0f
         );
 
-        GameObject spawnedEnemy = ObjectPoolManager.Spawn(prefab, spawnPos, Quaternion.identity);
+        GameObject spawnedEnemy = Instantiate(prefab, spawnPos, Quaternion.identity);
         EnemyAI enemy = spawnedEnemy.GetComponent<EnemyAI>();
         if (enemy != null)
         {

@@ -13,13 +13,8 @@ public class Bullet : MonoBehaviour
     private float currentSpeed;
     private int currentDamage;
     private float currentKnockbackForce;
-    private float returnTimer;
+    private float lifeTimer;
     private bool isEnemyBullet;
-
-    private void OnEnable()
-    {
-        returnTimer = lifetime;
-    }
 
     private void Awake()
     {
@@ -29,6 +24,10 @@ public class Bullet : MonoBehaviour
         currentKnockbackForce = knockbackForce;
     }
 
+    private void OnEnable()
+    {
+        lifeTimer = lifetime;
+    }
 
     private void Start()
     {
@@ -37,13 +36,10 @@ public class Bullet : MonoBehaviour
 
     private void Update()
     {
-        if (returnTimer > 0f)
+        lifeTimer -= Time.deltaTime;
+        if (lifeTimer <= 0f)
         {
-            returnTimer -= Time.deltaTime;
-            if (returnTimer <= 0f)
-            {
-                ObjectPoolManager.ReturnToPool(gameObject);
-            }
+            Destroy(gameObject);
         }
     }
 
@@ -62,38 +58,53 @@ public class Bullet : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // 1. Проверяем попадание в стену (для всех типов пуль)
         if (other.CompareTag("Wall"))
         {
-            ObjectPoolManager.ReturnToPool(gameObject);
-            return; // Выходим из метода, чтобы не проверять врагов/игрока
+            Destroy(gameObject);
+            return;
         }
 
         if (isEnemyBullet)
         {
-            if (other.CompareTag("Player"))
-            {
-                PlayerHealth player = other.GetComponent<PlayerHealth>();
-                if (player != null)
-                {
-                    player.TakeDamage(currentDamage);
-                    player.ApplyKnockback((Vector2)transform.right * currentKnockbackForce);
-                }
-                ObjectPoolManager.ReturnToPool(gameObject);
-            }
+            HitPlayer(other);
         }
         else
         {
-            if (other.CompareTag("Enemy"))
-            {
-                EnemyAI enemy = other.GetComponent<EnemyAI>();
-                if (enemy != null)
-                {
-                    enemy.TakeDamage(currentDamage);
-                    enemy.ApplyKnockback((Vector2)transform.right * currentKnockbackForce);
-                }
-                ObjectPoolManager.ReturnToPool(gameObject);
-            }
+            HitEnemy(other);
         }
+    }
+
+    private void HitPlayer(Collider2D other)
+    {
+        if (!other.CompareTag("Player"))
+        {
+            return;
+        }
+
+        PlayerHealth player = other.GetComponent<PlayerHealth>();
+        if (player != null)
+        {
+            player.TakeDamage(currentDamage);
+            player.ApplyKnockback((Vector2)transform.right * currentKnockbackForce);
+        }
+
+        Destroy(gameObject);
+    }
+
+    private void HitEnemy(Collider2D other)
+    {
+        if (!other.CompareTag("Enemy"))
+        {
+            return;
+        }
+
+        EnemyAI enemy = other.GetComponent<EnemyAI>();
+        if (enemy != null)
+        {
+            enemy.TakeDamage(currentDamage);
+            enemy.ApplyKnockback((Vector2)transform.right * currentKnockbackForce);
+        }
+
+        Destroy(gameObject);
     }
 }

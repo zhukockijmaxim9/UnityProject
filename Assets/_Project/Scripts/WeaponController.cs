@@ -134,47 +134,6 @@ public class WeaponController : MonoBehaviour
         BeginReload();
     }
 
-    public void NextWeapon()
-    {
-        if (availableWeapons == null || availableWeapons.Length == 0)
-        {
-            return;
-        }
-
-        for (int i = 1; i <= availableWeapons.Length; i++)
-        {
-            int nextIndex = (currentWeaponIndex + i) % availableWeapons.Length;
-            if (IsWeaponUnlocked(nextIndex))
-            {
-                EquipWeapon(nextIndex);
-                return;
-            }
-        }
-    }
-
-    public void PreviousWeapon()
-    {
-        if (availableWeapons == null || availableWeapons.Length == 0)
-        {
-            return;
-        }
-
-        for (int i = 1; i <= availableWeapons.Length; i++)
-        {
-            int previousIndex = currentWeaponIndex - i;
-            if (previousIndex < 0)
-            {
-                previousIndex += availableWeapons.Length;
-            }
-
-            if (IsWeaponUnlocked(previousIndex))
-            {
-                EquipWeapon(previousIndex);
-                return;
-            }
-        }
-    }
-
     public void ModifyDamage(int delta)
     {
         extraDamage += delta;
@@ -294,12 +253,7 @@ public class WeaponController : MonoBehaviour
     private void SpawnProjectile(float spreadOffset)
     {
         Quaternion shotRotation = firePoint.rotation * Quaternion.Euler(0f, 0f, spreadOffset);
-        GameObject bulletObject = ObjectPoolManager.Spawn(currentDefinition.bulletPrefab, firePoint.position, shotRotation);
-        if (bulletObject == null)
-        {
-            return;
-        }
-
+        GameObject bulletObject = Instantiate(currentDefinition.bulletPrefab, firePoint.position, shotRotation);
         Bullet bullet = bulletObject.GetComponent<Bullet>();
         if (bullet != null)
         {
