@@ -9,9 +9,11 @@ public class EnemySpawner : MonoBehaviour
     public GameObject bossPrefab;
     public GameObject exploderPrefab;
     public GameObject spitterPrefab;
+    public GameObject healthPickupPrefab;
 
     [Header("Spawn Settings")]
     public Transform player;
+    public Transform healthPickupPoint;
     public float minSpawnDistance = 14f;
     public float maxSpawnDistance = 18f;
     public float baseSpawnRate = 2.0f;
@@ -23,6 +25,7 @@ public class EnemySpawner : MonoBehaviour
     private bool isSpawning;
     private bool waitingForNextWave;
     private float nextWaveStartTime;
+    private GameObject currentHealthPickup;
 
     private void Awake()
     {
@@ -50,6 +53,7 @@ public class EnemySpawner : MonoBehaviour
                 waitingForNextWave = true;
                 nextWaveStartTime = Time.time + timeBetweenWaves;
                 GameManager.ReportWaveState(false);
+                SpawnHealthPickup();
             }
 
             if (Time.time >= nextWaveStartTime)
@@ -133,6 +137,16 @@ public class EnemySpawner : MonoBehaviour
         {
             enemy.ConfigureForWave(currentWave);
         }
+    }
+
+    private void SpawnHealthPickup()
+    {
+        if (healthPickupPrefab == null || healthPickupPoint == null || currentHealthPickup != null)
+        {
+            return;
+        }
+
+        currentHealthPickup = Instantiate(healthPickupPrefab, healthPickupPoint.position, healthPickupPoint.rotation);
     }
 
     private void ResolvePlayer()
