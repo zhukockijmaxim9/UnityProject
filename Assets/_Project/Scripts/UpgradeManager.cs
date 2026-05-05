@@ -74,12 +74,13 @@ public class UpgradeManager : MonoBehaviour
         FindPlayerReferences();
         ApplyFixedLevelUpgrades();
 
-        List<UpgradeOption> options = BuildRandomUpgradeList();
-        for (int i = 0; i < upgradeButtons.Length; i++)
-        {
-            UpgradeOption option = TakeRandomOption(options);
-            upgradeButtons[i].Setup(option.title, option.description, (int)option.type);
-        }
+        UpgradeOption healthOption = TakeRandomOption(BuildHealthUpgrades());
+        UpgradeOption movementOption = TakeRandomOption(BuildMovementUpgrades());
+        UpgradeOption weaponOption = TakeRandomOption(BuildWeaponUpgrades());
+
+        upgradeButtons[0].Setup(healthOption.title, healthOption.description, (int)healthOption.type);
+        upgradeButtons[1].Setup(movementOption.title, movementOption.description, (int)movementOption.type);
+        upgradeButtons[2].Setup(weaponOption.title, weaponOption.description, (int)weaponOption.type);
 
         upgradePanel.SetActive(true);
     }
@@ -153,17 +154,11 @@ public class UpgradeManager : MonoBehaviour
         }
     }
 
-    private List<UpgradeOption> BuildRandomUpgradeList()
+    private List<UpgradeOption> BuildHealthUpgrades()
     {
         List<UpgradeOption> options = new List<UpgradeOption>
         {
-            new UpgradeOption { type = UpgradeType.MaxHealth, title = "Vitality", description = "+20 Max HP" },
-            new UpgradeOption { type = UpgradeType.MoveSpeed, title = "Agility", description = "+15% Move Speed" },
-            new UpgradeOption { type = UpgradeType.StaminaRegen, title = "Endurance", description = "+25% Stamina Regen" },
-            new UpgradeOption { type = UpgradeType.Damage, title = "Heavy Bullets", description = "+1 Damage" },
-            new UpgradeOption { type = UpgradeType.FireRate, title = "Rapid Fire", description = "+20% Fire Rate" },
-            new UpgradeOption { type = UpgradeType.MagazineSize, title = "Extended Mag", description = "+4 Magazine Size" },
-            new UpgradeOption { type = UpgradeType.ReloadSpeed, title = "Quick Hands", description = "+20% Reload Speed" }
+            new UpgradeOption { type = UpgradeType.MaxHealth, title = "Vitality", description = "+20 Max HP" }
         };
 
         if (healthRegenUnlocked)
@@ -172,6 +167,26 @@ public class UpgradeManager : MonoBehaviour
         }
 
         return options;
+    }
+
+    private List<UpgradeOption> BuildMovementUpgrades()
+    {
+        return new List<UpgradeOption>
+        {
+            new UpgradeOption { type = UpgradeType.MoveSpeed, title = "Agility", description = "+15% Move Speed" },
+            new UpgradeOption { type = UpgradeType.StaminaRegen, title = "Endurance", description = "+25% Stamina Regen" }
+        };
+    }
+
+    private List<UpgradeOption> BuildWeaponUpgrades()
+    {
+        return new List<UpgradeOption>
+        {
+            new UpgradeOption { type = UpgradeType.Damage, title = "Heavy Bullets", description = "+1 Damage" },
+            new UpgradeOption { type = UpgradeType.FireRate, title = "Rapid Fire", description = "+20% Fire Rate" },
+            new UpgradeOption { type = UpgradeType.MagazineSize, title = "Extended Mag", description = "+4 Magazine Size" },
+            new UpgradeOption { type = UpgradeType.ReloadSpeed, title = "Quick Hands", description = "+20% Reload Speed" }
+        };
     }
 
     private UpgradeOption TakeRandomOption(List<UpgradeOption> options)
