@@ -9,9 +9,15 @@ public class WeaponController : MonoBehaviour
     [Header("Loadout")]
     [SerializeField] private WeaponDefinition[] availableWeapons;
 
+    [Header("Ammo")]
+    [SerializeField] private int bulletsAmmo;
+    [SerializeField] private int shellsAmmo;
+
     private WeaponDefinition currentDefinition;
     private int currentWeaponIndex = -1;
     private bool[] unlockedWeapons;
+    private int[] ammoInMagazines;
+
     private float nextShotTime;
     private float reloadTimer;
     private int currentDamage;
@@ -24,7 +30,11 @@ public class WeaponController : MonoBehaviour
     private float currentSpreadAngle;
     private int currentAmmo;
     private bool isReloading;
+
     private int extraDamage;
+    private int magazineSizeBonus;
+    private float fireRateMultiplier = 1f;
+    private float reloadTimeMultiplier = 1f;
 
     public string CurrentWeaponName => currentDefinition != null ? currentDefinition.weaponName : "";
     public int CurrentAmmo => currentAmmo;
@@ -36,9 +46,12 @@ public class WeaponController : MonoBehaviour
         if (availableWeapons != null)
         {
             unlockedWeapons = new bool[availableWeapons.Length];
-            if (unlockedWeapons.Length > 0)
+            ammoInMagazines = new int[availableWeapons.Length];
+
+            if (availableWeapons.Length > 0)
             {
                 unlockedWeapons[0] = true;
+                ammoInMagazines[0] = GetMagazineSize(availableWeapons[0]);
             }
         }
 
@@ -49,17 +62,7 @@ public class WeaponController : MonoBehaviour
     {
         HandleKeyboardInput();
         HandleShootingInput();
-
-        if (!isReloading)
-        {
-            return;
-        }
-
-        reloadTimer -= Time.deltaTime;
-        if (reloadTimer <= 0f)
-        {
-            FinishReload();
-        }
+        UpdateReload();
     }
 
     private void HandleKeyboardInput()
@@ -88,6 +91,20 @@ public class WeaponController : MonoBehaviour
         }
     }
 
+    private void UpdateReload()
+    {
+        if (!isReloading)
+        {
+            return;
+        }
+
+        reloadTimer -= Time.deltaTime;
+        if (reloadTimer <= 0f)
+        {
+            FinishReload();
+        }
+    }
+
     public bool TryFire()
     {
         if (!GameManager.CanGameplayRun() || isReloading || Time.time < nextShotTime)
@@ -108,6 +125,7 @@ public class WeaponController : MonoBehaviour
 
         FireProjectiles();
         currentAmmo--;
+        SaveCurrentMagazine();
         nextShotTime = Time.time + (1f / Mathf.Max(0.01f, currentFireRate));
         ReportAmmo();
 
@@ -143,18 +161,22 @@ public class WeaponController : MonoBehaviour
 
     public void MultiplyFireRate(float multiplier)
     {
+        fireRateMultiplier = Mathf.Max(0.1f, fireRateMultiplier * multiplier);
         currentFireRate = Mathf.Max(0.1f, currentFireRate * multiplier);
     }
 
     public void ModifyMagazineSize(int delta)
     {
+        magazineSizeBonus += delta;
         currentMagazineSize = Mathf.Max(1, currentMagazineSize + delta);
         currentAmmo = Mathf.Min(currentAmmo, currentMagazineSize);
+        SaveCurrentMagazine();
         ReportAmmo();
     }
 
     public void MultiplyReloadTime(float multiplier)
     {
+        reloadTimeMultiplier = Mathf.Max(0.05f, reloadTimeMultiplier * multiplier);
         currentReloadTime = Mathf.Max(0.05f, currentReloadTime * multiplier);
     }
 
@@ -175,6 +197,8 @@ public class WeaponController : MonoBehaviour
             if (!unlockedWeapons[i] && availableWeapons[i] != null)
             {
                 unlockedWeapons[i] = true;
+                ammoInMagazines[i] = GetMagazineSize(availableWeapons[i]);
+                AddAmmo(availableWeapons[i].ammoType, GetMagazineSize(availableWeapons[i]));
                 EquipWeapon(i);
                 Debug.Log("Unlocked and equipped: " + availableWeapons[i].weaponName);
                 return;
@@ -185,6 +209,48 @@ public class WeaponController : MonoBehaviour
     public bool IsWeaponUnlocked(int index)
     {
         return unlockedWeapons != null && index >= 0 && index < unlockedWeapons.Length && unlockedWeapons[index];
+    }
+
+    public bool IsAmmoTypeUnlocked(WeaponDefinition.AmmoType ammoType)
+    {
+        if (ammoType == WeaponDefinition.AmmoType.Pistol)
+        {
+            return true;
+        }
+
+        if (availableWeapons == null || unlockedWeapons == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < availableWeapons.Length; i++)
+        {
+            if (unlockedWeapons[i] && availableWeapons[i] != null && availableWeapons[i].ammoType == ammoType)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void AddAmmo(WeaponDefinition.AmmoType ammoType, int amount)
+    {
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        if (ammoType == WeaponDefinition.AmmoType.Bullets)
+        {
+            bulletsAmmo += amount;
+        }
+        else if (ammoType == WeaponDefinition.AmmoType.Shells)
+        {
+            shellsAmmo += amount;
+        }
+
+        ReportAmmo();
     }
 
     public void EquipWeapon(int weaponIndex)
@@ -206,17 +272,19 @@ public class WeaponController : MonoBehaviour
             return;
         }
 
+        SaveCurrentMagazine();
+
         currentDefinition = definition;
         currentWeaponIndex = weaponIndex;
         currentDamage = Mathf.Max(1, definition.damage + extraDamage);
-        currentFireRate = Mathf.Max(0.1f, definition.fireRate);
+        currentFireRate = Mathf.Max(0.1f, definition.fireRate * fireRateMultiplier);
         currentProjectileSpeed = Mathf.Max(0.1f, definition.projectileSpeed);
         currentProjectileKnockback = Mathf.Max(0f, definition.projectileKnockback);
-        currentMagazineSize = Mathf.Max(1, definition.magazineSize);
-        currentReloadTime = Mathf.Max(0.05f, definition.reloadTime);
+        currentMagazineSize = GetMagazineSize(definition);
+        currentReloadTime = Mathf.Max(0.05f, definition.reloadTime * reloadTimeMultiplier);
         currentProjectilesPerShot = Mathf.Max(1, definition.projectilesPerShot);
         currentSpreadAngle = Mathf.Max(0f, definition.spreadAngle);
-        currentAmmo = currentMagazineSize;
+        currentAmmo = Mathf.Clamp(ammoInMagazines[weaponIndex], 0, currentMagazineSize);
         isReloading = false;
         ReportAmmo();
     }
@@ -263,7 +331,7 @@ public class WeaponController : MonoBehaviour
 
     private void BeginReload()
     {
-        if (isReloading)
+        if (isReloading || !CanReload())
         {
             return;
         }
@@ -272,15 +340,86 @@ public class WeaponController : MonoBehaviour
         reloadTimer = currentReloadTime;
     }
 
+    private bool CanReload()
+    {
+        if (currentDefinition == null || currentAmmo >= currentMagazineSize)
+        {
+            return false;
+        }
+
+        if (currentDefinition.ammoType == WeaponDefinition.AmmoType.Pistol)
+        {
+            return true;
+        }
+
+        return GetReserveAmmo(currentDefinition.ammoType) > 0;
+    }
+
     private void FinishReload()
     {
         isReloading = false;
-        currentAmmo = currentMagazineSize;
+
+        if (currentDefinition.ammoType == WeaponDefinition.AmmoType.Pistol)
+        {
+            currentAmmo = currentMagazineSize;
+        }
+        else
+        {
+            int neededAmmo = currentMagazineSize - currentAmmo;
+            int loadedAmmo = Mathf.Min(neededAmmo, GetReserveAmmo(currentDefinition.ammoType));
+            RemoveReserveAmmo(currentDefinition.ammoType, loadedAmmo);
+            currentAmmo += loadedAmmo;
+        }
+
+        SaveCurrentMagazine();
         ReportAmmo();
+    }
+
+    private int GetMagazineSize(WeaponDefinition definition)
+    {
+        return Mathf.Max(1, definition.magazineSize + magazineSizeBonus);
+    }
+
+    private void SaveCurrentMagazine()
+    {
+        if (ammoInMagazines == null || currentWeaponIndex < 0 || currentWeaponIndex >= ammoInMagazines.Length)
+        {
+            return;
+        }
+
+        ammoInMagazines[currentWeaponIndex] = currentAmmo;
+    }
+
+    private int GetReserveAmmo(WeaponDefinition.AmmoType ammoType)
+    {
+        if (ammoType == WeaponDefinition.AmmoType.Bullets)
+        {
+            return bulletsAmmo;
+        }
+
+        if (ammoType == WeaponDefinition.AmmoType.Shells)
+        {
+            return shellsAmmo;
+        }
+
+        return -1;
+    }
+
+    private void RemoveReserveAmmo(WeaponDefinition.AmmoType ammoType, int amount)
+    {
+        if (ammoType == WeaponDefinition.AmmoType.Bullets)
+        {
+            bulletsAmmo = Mathf.Max(0, bulletsAmmo - amount);
+        }
+        else if (ammoType == WeaponDefinition.AmmoType.Shells)
+        {
+            shellsAmmo = Mathf.Max(0, shellsAmmo - amount);
+        }
     }
 
     private void ReportAmmo()
     {
-        GameManager.ReportWeaponAmmo(currentAmmo, currentMagazineSize);
+        int reserveAmmo = currentDefinition != null ? GetReserveAmmo(currentDefinition.ammoType) : 0;
+        GameManager.ReportWeaponAmmo(currentAmmo, reserveAmmo);
     }
 }

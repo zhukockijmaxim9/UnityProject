@@ -46,7 +46,7 @@ public class GameHud : MonoBehaviour
         int currentHealth,
         int maxHealth,
         int currentAmmo,
-        int maxAmmo,
+        int reserveAmmo,
         int currentWave,
         int killCount,
         int score,
@@ -57,7 +57,7 @@ public class GameHud : MonoBehaviour
         EnsureCreated();
 
         healthText.text = maxHealth > 0 ? $"HP: {currentHealth}/{maxHealth}" : "HP: --";
-        ammoText.text = maxAmmo > 0 ? $"Ammo: {currentAmmo}/{maxAmmo}" : "Ammo: --";
+        ammoText.text = reserveAmmo < 0 ? $"Ammo: {currentAmmo}/∞" : $"Ammo: {currentAmmo}/{reserveAmmo}";
         waveText.text = $"Wave: {Mathf.Max(1, currentWave)}";
         killsText.text = $"Kills: {killCount}";
         scoreText.text = $"Score: {score:0000}";

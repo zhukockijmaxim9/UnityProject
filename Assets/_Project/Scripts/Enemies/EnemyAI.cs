@@ -161,6 +161,11 @@ public abstract class EnemyAI : MonoBehaviour
         if (coll != null) coll.enabled = false;
 
         GameManager.ReportEnemyKilled(scoreValue);
+        if (EnemySpawner.Instance != null)
+        {
+            EnemySpawner.Instance.TryDropAmmo(transform.position);
+        }
+
         StartCoroutine(DeathAnimationRoutine());
     }
 

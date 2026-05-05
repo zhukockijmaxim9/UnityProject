@@ -396,11 +396,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 4625718619702770580, guid: 8cab89851ba5c1241ab97a764eaa7539, type: 3}
   m_PrefabInstance: {fileID: 686792277756739987}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &418234995 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4004385432317177369, guid: 8cab89851ba5c1241ab97a764eaa7539, type: 3}
-  m_PrefabInstance: {fileID: 686792277756739987}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &467649851
 GameObject:
   m_ObjectHideFlags: 0
@@ -6836,6 +6831,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
   maxHealth: 100
+  healthRegenPerSecond: 2
   healthSlider: {fileID: 700716080}
   damagePopupPrefab: {fileID: 2178480866258582282, guid: 88cb758318f900045be4b0ae9781b3a4, type: 3}
   knockbackTotalTime: 0.2
@@ -6918,7 +6914,6 @@ GameObject:
   - component: {fileID: 1332247363}
   - component: {fileID: 1332247362}
   - component: {fileID: 1332247361}
-  - component: {fileID: 1332247366}
   m_Layer: 0
   m_Name: Walls
   m_TagString: Wall
@@ -7359,18 +7354,6 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
---- !u!114 &1332247366
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1332247359}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
 --- !u!1 &1467471570
 GameObject:
   m_ObjectHideFlags: 0
@@ -7803,13 +7786,18 @@ MonoBehaviour:
   bossPrefab: {fileID: 6099850138208741684, guid: 750a40e98ac5a81479c5e0a325ff3d55, type: 3}
   exploderPrefab: {fileID: 6099850138208741684, guid: 4c73465e9310ac946b86e840e8a9747a, type: 3}
   spitterPrefab: {fileID: 6099850138208741684, guid: ee053b93a7c6e6a4fafff294982b2378, type: 3}
+  healthPickupPrefab: {fileID: 6969849174472067747, guid: e66da037b1b676a48854c1325ab7d579, type: 3}
+  bulletAmmoPickupPrefab: {fileID: 6840278241999847617, guid: 82baae745d08c59469ca48534012ebcf, type: 3}
+  shellAmmoPickupPrefab: {fileID: 6840278241999847617, guid: 12549d98064767945818d2e7de6f0425, type: 3}
   player: {fileID: 1202789471}
+  healthPickupPoint: {fileID: 1928373556}
   minSpawnDistance: 14
   maxSpawnDistance: 15
   baseSpawnRate: 2
   timeBetweenWaves: 2.5
-  useGeneratedWaves: 1
-  customWaves: []
+  ammoDropChance: 0.2
+  normalWaveAmmoCoverage: 0.4
+  bossWaveAmmoCoverage: 0.5
   currentWave: 0
 --- !u!4 &1868029183
 Transform:
@@ -7963,6 +7951,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1911564275}
   m_CullTransparentMesh: 1
+--- !u!1 &1928373555
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1928373556}
+  m_Layer: 0
+  m_Name: HealthSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1928373556
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1928373555}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.53, y: 2.19, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1982518458
 GameObject:
   m_ObjectHideFlags: 0
@@ -7972,7 +7991,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1982518460}
-  - component: {fileID: 1982518459}
   m_Layer: 0
   m_Name: PathFinding2D
   m_TagString: Untagged
@@ -7980,23 +7998,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1982518459
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1982518458}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a828e1165bf9ccd4bac797b1c4c7577b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Pathfinding2D
-  wallsTilemap: {fileID: 1332247365}
-  gridHalfWidth: 50
-  gridHalfHeight: 50
-  wallProximityCost: 0.5
-  maxIterations: 2000
 --- !u!4 &1982518460
 Transform:
   m_ObjectHideFlags: 0
@@ -8319,3 +8320,4 @@ SceneRoots:
   - {fileID: 256688770}
   - {fileID: 938854298}
   - {fileID: 1982518460}
+  - {fileID: 1928373556}

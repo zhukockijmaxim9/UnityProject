@@ -23,7 +23,7 @@ public class GameManager : MonoBehaviour
     private int currentHealth;
     private int maxHealth;
     private int currentAmmo;
-    private int maxAmmo;
+    private int reserveAmmo;
     private bool waveActive;
     private bool isGameOver;
     private bool isUpgradeMenuOpen;
@@ -93,9 +93,9 @@ public class GameManager : MonoBehaviour
         EnsureInstance().HandlePlayerDeath();
     }
 
-    public static void ReportWeaponAmmo(int ammoInMagazine, int magazineSize)
+    public static void ReportWeaponAmmo(int ammoInMagazine, int weaponReserveAmmo)
     {
-        EnsureInstance().SetWeaponAmmo(ammoInMagazine, magazineSize);
+        EnsureInstance().SetWeaponAmmo(ammoInMagazine, weaponReserveAmmo);
     }
 
     public static void ReportWaveState(bool active)
@@ -195,10 +195,10 @@ public class GameManager : MonoBehaviour
         restartCoroutine = StartCoroutine(RestartCurrentSceneAfterDelay());
     }
 
-    public void SetWeaponAmmo(int ammoInMagazine, int magazineSize)
+    public void SetWeaponAmmo(int ammoInMagazine, int weaponReserveAmmo)
     {
         currentAmmo = Mathf.Max(0, ammoInMagazine);
-        maxAmmo = Mathf.Max(0, magazineSize);
+        reserveAmmo = weaponReserveAmmo;
         RefreshHud();
     }
 
@@ -217,7 +217,7 @@ public class GameManager : MonoBehaviour
         currentHealth = 0;
         maxHealth = 0;
         currentAmmo = 0;
-        maxAmmo = 0;
+        reserveAmmo = 0;
         waveActive = false;
         isGameOver = false;
 
@@ -277,7 +277,7 @@ public class GameManager : MonoBehaviour
     private void RefreshHud()
     {
         EnsureHudExists();
-        hud.Refresh(currentHealth, maxHealth, currentAmmo, maxAmmo, currentWave, killCount, score, currentLevel, currentXP, targetXP);
+        hud.Refresh(currentHealth, maxHealth, currentAmmo, reserveAmmo, currentWave, killCount, score, currentLevel, currentXP, targetXP);
     }
 
     private IEnumerator RestartCurrentSceneAfterDelay()

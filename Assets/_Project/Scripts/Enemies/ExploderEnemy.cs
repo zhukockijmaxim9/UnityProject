@@ -68,6 +68,10 @@ public class ExploderEnemy : EnemyAI
         }
 
         GameManager.ReportEnemyKilled(scoreValue);
+        if (EnemySpawner.Instance != null)
+        {
+            EnemySpawner.Instance.TryDropAmmo(transform.position);
+        }
         
         if (CameraShakeManager.Instance != null)
         {
