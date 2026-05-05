@@ -20,18 +20,12 @@ public class TopDownCharacterController : MonoBehaviour
     [SerializeField] private float staminaRegenDelay = 0.6f;
     [SerializeField] private Slider staminaSlider;
 
-    [Header("Default Weapon Bootstrap")]
-    [SerializeField] private GameObject bulletPrefab;
-    [SerializeField] private Transform firePoint;
-    [SerializeField] private float fireRate = 4f;
-
     private Rigidbody2D rb;
     private Camera mainCamera;
     private Vector2 moveInput;
     private Vector2 mousePos;
     private Vector2 dashDirection;
     private PlayerHealth playerHealth;
-    private WeaponController weaponController;
     private float currentStamina;
     private float dashTimer;
     private float dashCooldownTimer;
@@ -46,46 +40,13 @@ public class TopDownCharacterController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         mainCamera = Camera.main;
         playerHealth = GetComponent<PlayerHealth>();
-        weaponController = GetComponent<WeaponController>();
-        if (weaponController == null)
-        {
-            weaponController = gameObject.AddComponent<WeaponController>();
-        }
-
         currentStamina = maxStamina;
-
-        ResolveFirePoint();
-        weaponController.Bootstrap(bulletPrefab, firePoint, fireRate);
         UpdateStaminaUi();
     }
 
     public void OnMove(InputValue value)
     {
         moveInput = value.Get<Vector2>();
-    }
-
-    public void OnReload(InputValue value)
-    {
-        if (value.isPressed && CanAct())
-        {
-            weaponController.TryReload();
-        }
-    }
-
-    public void OnPrevious(InputValue value)
-    {
-        if (value.isPressed && CanAct())
-        {
-            weaponController.PreviousWeapon();
-        }
-    }
-
-    public void OnNext(InputValue value)
-    {
-        if (value.isPressed && CanAct())
-        {
-            weaponController.NextWeapon();
-        }
     }
 
     public void OnDash(InputValue value)
@@ -114,16 +75,6 @@ public class TopDownCharacterController : MonoBehaviour
         }
 
         UpdateDashAndStaminaTimers();
-        HandleContinuousAttack();
-    }
-
-    private void HandleContinuousAttack()
-    {
-        // Проверяем, зажата ли левая кнопка мыши напрямую через Mouse.current
-        if (Mouse.current != null && Mouse.current.leftButton.isPressed && CanAct())
-        {
-            weaponController.TryFire();
-        }
     }
 
     private void FixedUpdate()
@@ -220,30 +171,6 @@ public class TopDownCharacterController : MonoBehaviour
 
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         rb.rotation = angle;
-    }
-
-    private void ResolveFirePoint()
-    {
-        if (firePoint != null)
-        {
-            return;
-        }
-
-        Transform directMatch = transform.Find("FirePoint");
-        if (directMatch != null)
-        {
-            firePoint = directMatch;
-            return;
-        }
-
-        foreach (Transform child in GetComponentsInChildren<Transform>(true))
-        {
-            if (child.name == "FirePoint")
-            {
-                firePoint = child;
-                return;
-            }
-        }
     }
 
     private void UpdateStaminaUi()

@@ -8,19 +8,6 @@ public class WeaponController : MonoBehaviour
 
     [Header("Loadout")]
     [SerializeField] private WeaponDefinition[] availableWeapons;
-    [SerializeField] private int startingWeaponIndex;
-
-    [Header("Fallback Weapon")]
-    [SerializeField] private string fallbackWeaponName = "Pistol";
-    [SerializeField] private GameObject fallbackBulletPrefab;
-    [SerializeField] private int fallbackDamage = 1;
-    [SerializeField] private float fallbackFireRate = 4f;
-    [SerializeField] private float fallbackProjectileSpeed = 150f;
-    [SerializeField] private float fallbackProjectileKnockback = 3f;
-    [SerializeField] private int fallbackMagazineSize = 8;
-    [SerializeField] private float fallbackReloadTime = 1.2f;
-    [SerializeField] private int fallbackProjectilesPerShot = 1;
-    [SerializeField] private float fallbackSpreadAngle = 0f;
 
     private WeaponDefinition currentDefinition;
     private int currentWeaponIndex = -1;
@@ -37,51 +24,31 @@ public class WeaponController : MonoBehaviour
     private float currentSpreadAngle;
     private int currentAmmo;
     private bool isReloading;
-    private int extraDamage = 0; // Наш бонус от апгрейдов
+    private int extraDamage;
 
-    public string CurrentWeaponName => currentDefinition != null ? currentDefinition.weaponName : fallbackWeaponName;
+    public string CurrentWeaponName => currentDefinition != null ? currentDefinition.weaponName : "";
     public int CurrentAmmo => currentAmmo;
     public int CurrentMagazineSize => currentMagazineSize;
     public bool IsReloading => isReloading;
-
-    public void Bootstrap(GameObject bulletPrefab, Transform muzzle, float fireRate)
-    {
-        if (firePoint == null)
-        {
-            firePoint = muzzle;
-        }
-
-        if (fallbackBulletPrefab == null)
-        {
-            fallbackBulletPrefab = bulletPrefab;
-        }
-
-        if (fireRate > 0f)
-        {
-            fallbackFireRate = fireRate;
-        }
-
-        if (currentDefinition == null || currentWeaponIndex < 0)
-        {
-            ApplyFallbackWeapon();
-        }
-
-        ReportAmmo();
-    }
 
     private void Awake()
     {
         if (availableWeapons != null)
         {
             unlockedWeapons = new bool[availableWeapons.Length];
-            if (unlockedWeapons.Length > 0) unlockedWeapons[0] = true; // Пистолет открыт сразу
+            if (unlockedWeapons.Length > 0)
+            {
+                unlockedWeapons[0] = true;
+            }
         }
-        EquipStartingWeapon();
+
+        EquipWeapon(0);
     }
 
     private void Update()
     {
         HandleKeyboardInput();
+        HandleShootingInput();
 
         if (!isReloading)
         {
@@ -97,7 +64,10 @@ public class WeaponController : MonoBehaviour
 
     private void HandleKeyboardInput()
     {
-        if (Keyboard.current == null) return;
+        if (Keyboard.current == null)
+        {
+            return;
+        }
 
         if (Keyboard.current.digit1Key.wasPressedThisFrame) EquipWeapon(0);
         else if (Keyboard.current.digit2Key.wasPressedThisFrame) EquipWeapon(1);
@@ -107,6 +77,14 @@ public class WeaponController : MonoBehaviour
         if (Keyboard.current.rKey.wasPressedThisFrame)
         {
             TryReload();
+        }
+    }
+
+    private void HandleShootingInput()
+    {
+        if (Mouse.current != null && Mouse.current.leftButton.isPressed)
+        {
+            TryFire();
         }
     }
 
@@ -163,7 +141,15 @@ public class WeaponController : MonoBehaviour
             return;
         }
 
-        EquipWeapon((currentWeaponIndex + 1) % availableWeapons.Length);
+        for (int i = 1; i <= availableWeapons.Length; i++)
+        {
+            int nextIndex = (currentWeaponIndex + i) % availableWeapons.Length;
+            if (IsWeaponUnlocked(nextIndex))
+            {
+                EquipWeapon(nextIndex);
+                return;
+            }
+        }
     }
 
     public void PreviousWeapon()
@@ -173,20 +159,27 @@ public class WeaponController : MonoBehaviour
             return;
         }
 
-        int previousIndex = currentWeaponIndex - 1;
-        if (previousIndex < 0)
+        for (int i = 1; i <= availableWeapons.Length; i++)
         {
-            previousIndex = availableWeapons.Length - 1;
-        }
+            int previousIndex = currentWeaponIndex - i;
+            if (previousIndex < 0)
+            {
+                previousIndex += availableWeapons.Length;
+            }
 
-        EquipWeapon(previousIndex);
+            if (IsWeaponUnlocked(previousIndex))
+            {
+                EquipWeapon(previousIndex);
+                return;
+            }
+        }
     }
 
     public void ModifyDamage(int delta)
     {
         extraDamage += delta;
         currentDamage += delta;
-        Debug.Log("DAMAGE UPGRADED! Current bonus: +" + extraDamage + " | Total Damage: " + currentDamage);
+        Debug.Log("Damage upgraded. Bonus: +" + extraDamage + ", total damage: " + currentDamage);
     }
 
     public void MultiplyFireRate(float multiplier)
@@ -198,6 +191,7 @@ public class WeaponController : MonoBehaviour
     {
         currentMagazineSize = Mathf.Max(1, currentMagazineSize + delta);
         currentAmmo = Mathf.Min(currentAmmo, currentMagazineSize);
+        ReportAmmo();
     }
 
     public void MultiplyReloadTime(float multiplier)
@@ -212,55 +206,49 @@ public class WeaponController : MonoBehaviour
 
     public void UnlockNextWeapon()
     {
-        if (availableWeapons == null || unlockedWeapons == null) return;
+        if (availableWeapons == null || unlockedWeapons == null)
+        {
+            return;
+        }
+
         for (int i = 0; i < unlockedWeapons.Length; i++)
         {
-            if (!unlockedWeapons[i])
+            if (!unlockedWeapons[i] && availableWeapons[i] != null)
             {
                 unlockedWeapons[i] = true;
-                EquipWeapon(i); 
-                Debug.Log("Unlocked and Equipped: " + availableWeapons[i].weaponName);
-                break;
+                EquipWeapon(i);
+                Debug.Log("Unlocked and equipped: " + availableWeapons[i].weaponName);
+                return;
             }
         }
     }
 
     public bool IsWeaponUnlocked(int index)
     {
-        if (unlockedWeapons == null || index < 0 || index >= unlockedWeapons.Length) return false;
-        return unlockedWeapons[index];
-    }
-
-    private void EquipStartingWeapon()
-    {
-        if (availableWeapons != null && availableWeapons.Length > 0)
-        {
-            EquipWeapon(Mathf.Clamp(startingWeaponIndex, 0, availableWeapons.Length - 1));
-            return;
-        }
-
-        ApplyFallbackWeapon();
+        return unlockedWeapons != null && index >= 0 && index < unlockedWeapons.Length && unlockedWeapons[index];
     }
 
     public void EquipWeapon(int weaponIndex)
     {
         if (availableWeapons == null || weaponIndex < 0 || weaponIndex >= availableWeapons.Length)
         {
-            ApplyFallbackWeapon();
+            return;
+        }
+
+        if (!IsWeaponUnlocked(weaponIndex))
+        {
             return;
         }
 
         WeaponDefinition definition = availableWeapons[weaponIndex];
-        if (definition == null)
+        if (definition == null || definition.bulletPrefab == null)
         {
-            ApplyFallbackWeapon();
+            Debug.LogWarning("Weapon is not configured at index " + weaponIndex);
             return;
         }
 
         currentDefinition = definition;
         currentWeaponIndex = weaponIndex;
-        fallbackWeaponName = string.IsNullOrWhiteSpace(definition.weaponName) ? fallbackWeaponName : definition.weaponName;
-        fallbackBulletPrefab = definition.bulletPrefab != null ? definition.bulletPrefab : fallbackBulletPrefab;
         currentDamage = Mathf.Max(1, definition.damage + extraDamage);
         currentFireRate = Mathf.Max(0.1f, definition.fireRate);
         currentProjectileSpeed = Mathf.Max(0.1f, definition.projectileSpeed);
@@ -274,23 +262,6 @@ public class WeaponController : MonoBehaviour
         ReportAmmo();
     }
 
-    private void ApplyFallbackWeapon()
-    {
-        currentDefinition = null;
-        currentWeaponIndex = -1;
-        currentDamage = Mathf.Max(1, fallbackDamage + extraDamage);
-        currentFireRate = Mathf.Max(0.1f, fallbackFireRate);
-        currentProjectileSpeed = Mathf.Max(0.1f, fallbackProjectileSpeed);
-        currentProjectileKnockback = Mathf.Max(0f, fallbackProjectileKnockback);
-        currentMagazineSize = Mathf.Max(1, fallbackMagazineSize);
-        currentReloadTime = Mathf.Max(0.05f, fallbackReloadTime);
-        currentProjectilesPerShot = Mathf.Max(1, fallbackProjectilesPerShot);
-        currentSpreadAngle = Mathf.Max(0f, fallbackSpreadAngle);
-        currentAmmo = currentMagazineSize;
-        isReloading = false;
-        ReportAmmo();
-    }
-
     private bool EnsureReadyToShoot()
     {
         if (firePoint == null)
@@ -298,7 +269,7 @@ public class WeaponController : MonoBehaviour
             firePoint = transform.Find("FirePoint");
         }
 
-        return firePoint != null && fallbackBulletPrefab != null;
+        return firePoint != null && currentDefinition != null && currentDefinition.bulletPrefab != null;
     }
 
     private void FireProjectiles()
@@ -323,7 +294,11 @@ public class WeaponController : MonoBehaviour
     private void SpawnProjectile(float spreadOffset)
     {
         Quaternion shotRotation = firePoint.rotation * Quaternion.Euler(0f, 0f, spreadOffset);
-        GameObject bulletObject = ObjectPoolManager.Spawn(fallbackBulletPrefab, firePoint.position, shotRotation);
+        GameObject bulletObject = ObjectPoolManager.Spawn(currentDefinition.bulletPrefab, firePoint.position, shotRotation);
+        if (bulletObject == null)
+        {
+            return;
+        }
 
         Bullet bullet = bulletObject.GetComponent<Bullet>();
         if (bullet != null)

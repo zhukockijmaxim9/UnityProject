@@ -6840,35 +6840,6 @@ MonoBehaviour:
   damagePopupPrefab: {fileID: 2178480866258582282, guid: 88cb758318f900045be4b0ae9781b3a4, type: 3}
   knockbackTotalTime: 0.2
   damageInvulnerabilityTime: 0.5
---- !u!114 &1202789483
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 382026885}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1f3e31f2a1d84b9190d9bdf5bdfbe111, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeaponController
-  firePoint: {fileID: 418234995}
-  availableWeapons:
-  - {fileID: 11400000, guid: 0ee0f8792df7c0042a1f67d9a7b9b01c, type: 2}
-  - {fileID: 11400000, guid: 28914fa42ce8ed449bdaaea6b86597b3, type: 2}
-  - {fileID: 11400000, guid: a9e2182cba21f9d498742411372868b0, type: 2}
-  - {fileID: 11400000, guid: f7790ced311f4be48a9c4f4c9d202108, type: 2}
-  startingWeaponIndex: 0
-  fallbackWeaponName: Pistol
-  fallbackBulletPrefab: {fileID: 3742799303467310150, guid: 88659e701c4132a48aa0f362661bd7ca, type: 3}
-  fallbackDamage: 1
-  fallbackFireRate: 4
-  fallbackProjectileSpeed: 30
-  fallbackProjectileKnockback: 3
-  fallbackMagazineSize: 8
-  fallbackReloadTime: 1.2
-  fallbackProjectilesPerShot: 1
-  fallbackSpreadAngle: 0
 --- !u!60 &1202789489
 PolygonCollider2D:
   m_ObjectHideFlags: 0
@@ -8318,14 +8289,6 @@ PrefabInstance:
       value: 0.43
       objectReference: {fileID: 0}
     - target: {fileID: 8342446990713750417, guid: 8cab89851ba5c1241ab97a764eaa7539, type: 3}
-      propertyPath: firePoint
-      value: 
-      objectReference: {fileID: 418234995}
-    - target: {fileID: 8342446990713750417, guid: 8cab89851ba5c1241ab97a764eaa7539, type: 3}
-      propertyPath: bulletPrefab
-      value: 
-      objectReference: {fileID: 3742799303467310150, guid: 88659e701c4132a48aa0f362661bd7ca, type: 3}
-    - target: {fileID: 8342446990713750417, guid: 8cab89851ba5c1241ab97a764eaa7539, type: 3}
       propertyPath: staminaSlider
       value: 
       objectReference: {fileID: 151199839}
@@ -8337,9 +8300,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4625718619702770580, guid: 8cab89851ba5c1241ab97a764eaa7539, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1202789477}
-    - targetCorrespondingSourceObject: {fileID: 4625718619702770580, guid: 8cab89851ba5c1241ab97a764eaa7539, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1202789483}
     - targetCorrespondingSourceObject: {fileID: 4625718619702770580, guid: 8cab89851ba5c1241ab97a764eaa7539, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1202789489}
