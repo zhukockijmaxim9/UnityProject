@@ -3,9 +3,9 @@ using UnityEngine;
 public class DasherEnemy : EnemyAI
 {
     [Header("Dash Settings")]
-    [SerializeField] private float dashSpeed = 7.5f;
+    [SerializeField] private float dashSpeed = 10f;
     [SerializeField] private float dashDuration = 0.35f;
-    [SerializeField] private float dashCooldown = 2.75f;
+    [SerializeField] private float dashCooldown = 3f;
     [SerializeField] private float dashTriggerDistance = 6f;
 
     private float nextDashTime;
@@ -15,8 +15,7 @@ public class DasherEnemy : EnemyAI
     public override void ConfigureForWave(int waveNumber)
     {
         base.ConfigureForWave(waveNumber);
-        // Дешер быстрее, но у него меньше здоровья
-        speed *= 1.5f;
+        // Дешер теперь имеет такую же базовую скорость, как и обычный зомби, но у него меньше здоровья
         health = Mathf.Max(1, Mathf.RoundToInt(health * 0.8f));
         attackRate = Mathf.Max(0.3f, attackRate * 0.8f);
         scoreValue = Mathf.RoundToInt(scoreValue * 1.25f);

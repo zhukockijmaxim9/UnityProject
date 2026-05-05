@@ -179,19 +179,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85a0ec5d89d1de94e94204abc302ba90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DasherEnemy
-  speed: 2
+  speed: 2.5
   stoppingDistance: 0.6
-  health: 100
+  health: 40
   scoreValue: 100
-  damageToPlayer: 1
+  damageToPlayer: 15
   attackRate: 1
   playerKnockbackForce: 7
   knockbackTotalTime: 0.2
   knockbackRepeatDelay: 0.1
   knockbackMass: 1
-  damagePopupPrefab: {fileID: 0}
+  damagePopupPrefab: {fileID: 2178480866258582282, guid: 88cb758318f900045be4b0ae9781b3a4, type: 3}
   currentHealth: 0
-  dashSpeed: 7.5
+  dashSpeed: 10
   dashDuration: 0.35
-  dashCooldown: 2.75
+  dashCooldown: 3
   dashTriggerDistance: 6

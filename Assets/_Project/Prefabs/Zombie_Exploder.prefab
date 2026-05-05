@@ -179,9 +179,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee3400a5f28d0344aa0ca06b864c9554, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExploderEnemy
-  speed: 2
+  speed: 4
   stoppingDistance: 0.6
-  health: 100
+  health: 20
   scoreValue: 100
   damageToPlayer: 1
   attackRate: 1
@@ -189,8 +189,8 @@ MonoBehaviour:
   knockbackTotalTime: 0.2
   knockbackRepeatDelay: 0.1
   knockbackMass: 1
-  damagePopupPrefab: {fileID: 0}
+  damagePopupPrefab: {fileID: 2178480866258582282, guid: 88cb758318f900045be4b0ae9781b3a4, type: 3}
   currentHealth: 0
-  explosionRadius: 3.5
+  explosionRadius: 4
   explosionDamage: 40
-  explosionEffectPrefab: {fileID: 0}
+  explosionEffectPrefab: {fileID: 4502321048490451571, guid: 46464387c2c8bec40b5e73197a5e978f, type: 3}

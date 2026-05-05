@@ -5,13 +5,13 @@ using System.Collections.Generic;
 public abstract class EnemyAI : MonoBehaviour
 {
     [Header("Movement Settings")]
-    public float speed = 2f;
+    public float speed = 2.5f;
     [SerializeField] protected float stoppingDistance = 0.6f;
 
     [Header("Health & Combat")]
-    public int health = 100;
+    public int health = 50;
     public int scoreValue = 100;
-    public int damageToPlayer = 1;
+    public int damageToPlayer = 10;
     public float attackRate = 1f;
     [SerializeField] protected float playerKnockbackForce = 7f;
 
@@ -189,7 +189,7 @@ public abstract class EnemyAI : MonoBehaviour
         if (spriteRenderer != null) spriteRenderer.color = originalColor;
     }
 
-    public void ApplyKnockback(Vector2 force)
+    public virtual void ApplyKnockback(Vector2 force)
     {
         if (isDead || force.sqrMagnitude <= 0.0001f || Time.time < nextKnockbackTime) return;
 

@@ -4,10 +4,10 @@ public class SpitterEnemy : EnemyAI
 {
     [Header("Spitter Settings")]
     [SerializeField] private GameObject spitPrefab;
-    [SerializeField] private float spitRange = 7f;
-    [SerializeField] private float spitRate = 2f;
-    [SerializeField] private float spitProjectileSpeed = 10f;
-    [SerializeField] private int spitDamage = 15;
+    [SerializeField] private float spitRange = 8f;
+    [SerializeField] private float spitRate = 0.5f;
+    [SerializeField] private float spitProjectileSpeed = 12f;
+    [SerializeField] private int spitDamage = 12;
 
     private float nextSpitTime;
 

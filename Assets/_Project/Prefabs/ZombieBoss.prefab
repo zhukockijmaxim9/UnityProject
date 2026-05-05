@@ -179,11 +179,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7bdae4f4b795afe42800142b0c732b55, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossEnemy
-  speed: 2
+  speed: 1.5
   stoppingDistance: 0.6
-  health: 100
+  health: 1000
   scoreValue: 100
-  damageToPlayer: 1
+  damageToPlayer: 25
   attackRate: 1
   playerKnockbackForce: 7
   knockbackTotalTime: 0.2
@@ -191,8 +191,11 @@ MonoBehaviour:
   knockbackMass: 1
   damagePopupPrefab: {fileID: 2178480866258582282, guid: 88cb758318f900045be4b0ae9781b3a4, type: 3}
   currentHealth: 0
-  summonPrefab: {fileID: 6099850138208741684, guid: 8b56f20cbd93843408c67f078f74744a, type: 3}
+  summonPrefab: {fileID: 6099850138208741684, guid: f19c2b75b60d2084e9b5e8d9b0964be0, type: 3}
   summonsPerCycle: 2
-  summonCooldown: 10
+  summonCooldown: 15
   summonRadius: 1.5
-  bossKnockbackMassMultiplier: 3
+  bossDashSpeed: 12
+  bossDashDuration: 0.6
+  bossDashCooldown: 5
+  bossDashTriggerDistance: 8

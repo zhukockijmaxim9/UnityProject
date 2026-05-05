@@ -3,7 +3,7 @@ using UnityEngine;
 public class ExploderEnemy : EnemyAI
 {
     [Header("Exploder Settings")]
-    [SerializeField] private float explosionRadius = 3.5f;
+    [SerializeField] private float explosionRadius = 4f;
     [SerializeField] private int explosionDamage = 40;
     [SerializeField] private GameObject explosionEffectPrefab;
 

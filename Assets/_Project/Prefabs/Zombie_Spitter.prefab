@@ -181,18 +181,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpitterEnemy
   speed: 2
   stoppingDistance: 0.6
-  health: 100
+  health: 30
   scoreValue: 100
-  damageToPlayer: 1
+  damageToPlayer: 5
   attackRate: 1
   playerKnockbackForce: 7
   knockbackTotalTime: 0.2
   knockbackRepeatDelay: 0.1
   knockbackMass: 1
-  damagePopupPrefab: {fileID: 0}
+  damagePopupPrefab: {fileID: 2178480866258582282, guid: 88cb758318f900045be4b0ae9781b3a4, type: 3}
   currentHealth: 0
-  spitPrefab: {fileID: 0}
-  spitRange: 7
-  spitRate: 2
-  spitProjectileSpeed: 10
-  spitDamage: 15
+  spitPrefab: {fileID: 3742799303467310150, guid: 969ea9fa4ea3cb246ad8df75141a46ef, type: 3}
+  spitRange: 8
+  spitRate: 0.5
+  spitProjectileSpeed: 12
+  spitDamage: 12
