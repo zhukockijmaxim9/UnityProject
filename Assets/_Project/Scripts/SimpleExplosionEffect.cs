@@ -1,18 +1,18 @@
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 public class SimpleExplosionEffect : MonoBehaviour
 {
     [SerializeField] private float duration = 0.5f;
     [SerializeField] private float targetScale = 4f;
-    [SerializeField] private Color startColor = new Color(1, 0.5f, 0, 1); // Оранжевый
-    [SerializeField] private Color endColor = new Color(1, 0, 0, 0);   // Красный прозрачный
+    [SerializeField] private Color startColor = new Color(1f, 0.5f, 0f, 1f);
+    [SerializeField] private Color endColor = new Color(1f, 0f, 0f, 0f);
 
-    private SpriteRenderer sr;
+    private SpriteRenderer spriteRenderer;
 
     private void Awake()
     {
-        sr = GetComponent<SpriteRenderer>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
         transform.localScale = Vector3.zero;
     }
 
@@ -23,25 +23,23 @@ public class SimpleExplosionEffect : MonoBehaviour
 
     private IEnumerator ExplodeRoutine()
     {
-        float timer = 0;
+        float timer = 0f;
+
         while (timer < duration)
         {
             timer += Time.deltaTime;
-            float t = timer / duration;
+            float progress = timer / duration;
 
-            // Расширяем круг
-            transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one * targetScale, t);
-            
-            // Меняем цвет и прозрачность
-            if (sr != null)
+            transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one * targetScale, progress);
+
+            if (spriteRenderer != null)
             {
-                sr.color = Color.Lerp(startColor, endColor, t);
+                spriteRenderer.color = Color.Lerp(startColor, endColor, progress);
             }
 
             yield return null;
         }
 
-        // Удаляем эффект после завершения
         Destroy(gameObject);
     }
 }

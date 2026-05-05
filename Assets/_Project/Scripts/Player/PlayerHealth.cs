@@ -36,11 +36,16 @@ public class PlayerHealth : MonoBehaviour
     private void Start()
     {
         currentHealth = maxHealth;
-        UpdateHealthUi();
-        GameManager.ReportPlayerHealth(currentHealth, maxHealth);
+        UpdateHealth();
     }
 
     private void Update()
+    {
+        UpdateTimers();
+        RegenerateHealth();
+    }
+
+    private void UpdateTimers()
     {
         if (damageInvulnerabilityCounter > 0)
         {
@@ -51,8 +56,6 @@ public class PlayerHealth : MonoBehaviour
         {
             knockbackCounter -= Time.deltaTime;
         }
-
-        RegenerateHealth();
     }
 
     public bool CanTakeDamage()
@@ -66,8 +69,7 @@ public class PlayerHealth : MonoBehaviour
 
         currentHealth = Mathf.Max(0, currentHealth - damage);
         damageInvulnerabilityCounter = damageInvulnerabilityTime;
-        UpdateHealthUi();
-        GameManager.ReportPlayerHealth(currentHealth, maxHealth);
+        UpdateHealth();
         SpawnDamagePopup(damage);
 
         if (CameraShakeManager.Instance != null)
@@ -92,8 +94,7 @@ public class PlayerHealth : MonoBehaviour
     {
         if (isDead) return;
         currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
-        UpdateHealthUi();
-        GameManager.ReportPlayerHealth(currentHealth, maxHealth);
+        UpdateHealth();
     }
 
     public void UnlockHealthRegen()
@@ -113,8 +114,7 @@ public class PlayerHealth : MonoBehaviour
         {
             currentHealth += amount;
         }
-        UpdateHealthUi();
-        GameManager.ReportPlayerHealth(currentHealth, maxHealth);
+        UpdateHealth();
     }
 
     private void HandleDeath()
@@ -123,9 +123,14 @@ public class PlayerHealth : MonoBehaviour
         isDead = true;
         currentHealth = 0;
         rb.linearVelocity = Vector2.zero;
+        UpdateHealth();
+        GameManager.ReportPlayerDeath();
+    }
+
+    private void UpdateHealth()
+    {
         UpdateHealthUi();
         GameManager.ReportPlayerHealth(currentHealth, maxHealth);
-        GameManager.ReportPlayerDeath();
     }
 
     private void UpdateHealthUi()
@@ -151,8 +156,7 @@ public class PlayerHealth : MonoBehaviour
         int healAmount = Mathf.FloorToInt(healthRegenProgress);
         healthRegenProgress -= healAmount;
         currentHealth = Mathf.Min(maxHealth, currentHealth + healAmount);
-        UpdateHealthUi();
-        GameManager.ReportPlayerHealth(currentHealth, maxHealth);
+        UpdateHealth();
     }
 
     private void SpawnDamagePopup(int amount)
