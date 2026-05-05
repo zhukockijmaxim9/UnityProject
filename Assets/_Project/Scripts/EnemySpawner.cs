@@ -1,36 +1,8 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class EnemySpawner : MonoBehaviour
 {
-    public enum EnemyType
-    {
-        Walker,
-        Dasher,
-        Spitter,
-        Exploder,
-        Boss
-    }
-
-    [System.Serializable]
-    public class SpawnInstruction
-    {
-        public EnemyType type = EnemyType.Walker;
-        public int amount = 5;
-        public float interval = 0.6f;
-        public GameObject prefabOverride;
-    }
-
-    [System.Serializable]
-    public class WaveDefinition
-    {
-        public string label = "Wave";
-        public float startDelay = 1.5f;
-        public List<SpawnInstruction> spawns = new List<SpawnInstruction>();
-    }
-
     [Header("Prefabs")]
     public GameObject enemyPrefab;
     public GameObject dasherPrefab;
@@ -44,8 +16,6 @@ public class EnemySpawner : MonoBehaviour
     public float maxSpawnDistance = 18f;
     public float baseSpawnRate = 2.0f;
     [SerializeField] private float timeBetweenWaves = 2.5f;
-    [SerializeField] private bool useGeneratedWaves = true;
-    [SerializeField] private List<WaveDefinition> customWaves = new List<WaveDefinition>();
 
     [Header("Wave Info")]
     public int currentWave = 0;
@@ -70,7 +40,6 @@ public class EnemySpawner : MonoBehaviour
     private void Update()
     {
         if (!GameManager.CanGameplayRun()) return;
-
         if (player == null || isSpawning) return;
 
         bool arenaIsClear = GameManager.GetAliveEnemies() <= 0;
@@ -99,30 +68,55 @@ public class EnemySpawner : MonoBehaviour
     private IEnumerator StartNextWave()
     {
         currentWave++;
-        WaveDefinition wave = GetWaveDefinition(currentWave);
-
         GameManager.ReportWave(currentWave);
         GameManager.ReportWaveState(true);
 
-        yield return new WaitForSeconds(wave.startDelay);
+        yield return new WaitForSeconds(currentWave == 1 ? 1f : 2f);
 
-        for (int i = 0; i < wave.spawns.Count; i++)
+        float spawnInterval = Mathf.Max(0.2f, baseSpawnRate - (currentWave * 0.15f));
+
+        yield return SpawnGroup(enemyPrefab, 5 + (currentWave * 2), spawnInterval);
+
+        if (currentWave >= 2)
         {
-            SpawnInstruction instruction = wave.spawns[i];
-            for (int j = 0; j < instruction.amount; j++)
-            {
-                SpawnEnemy(instruction);
-                yield return new WaitForSeconds(Mathf.Max(0.05f, instruction.interval));
-            }
+            yield return SpawnGroup(dasherPrefab, currentWave / 2, spawnInterval);
+        }
+
+        if (currentWave >= 3)
+        {
+            yield return SpawnGroup(spitterPrefab, currentWave / 3, spawnInterval);
+        }
+
+        if (currentWave >= 5)
+        {
+            yield return SpawnGroup(exploderPrefab, currentWave / 4, spawnInterval);
+        }
+
+        if (currentWave % 4 == 0)
+        {
+            yield return SpawnGroup(bossPrefab, currentWave / 4, 1.2f);
         }
 
         isSpawning = false;
         waitingForNextWave = false;
     }
 
-    private void SpawnEnemy(SpawnInstruction instruction)
+    private IEnumerator SpawnGroup(GameObject prefab, int amount, float interval)
     {
-        GameObject prefab = ResolvePrefab(instruction);
+        if (prefab == null || amount <= 0)
+        {
+            yield break;
+        }
+
+        for (int i = 0; i < amount; i++)
+        {
+            SpawnEnemy(prefab);
+            yield return new WaitForSeconds(Mathf.Max(0.05f, interval));
+        }
+    }
+
+    private void SpawnEnemy(GameObject prefab)
+    {
         if (player == null || prefab == null) return;
 
         Vector2 randomDir = Random.insideUnitCircle.normalized;
@@ -141,78 +135,14 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    private WaveDefinition GetWaveDefinition(int waveNumber)
-    {
-        if (!useGeneratedWaves && customWaves.Count > 0)
-        {
-            return customWaves[Mathf.Clamp(waveNumber - 1, 0, customWaves.Count - 1)];
-        }
-
-        return BuildGeneratedWave(waveNumber);
-    }
-
-    private WaveDefinition BuildGeneratedWave(int waveNumber)
-    {
-        int tier = 1 + ((waveNumber - 1) / 4);
-        float walkerInterval = Mathf.Max(0.2f, baseSpawnRate - (waveNumber * 0.15f));
-        float specialInterval = Mathf.Max(0.25f, walkerInterval + 0.1f);
-
-        WaveDefinition wave = new WaveDefinition
-        {
-            label = $"Wave {waveNumber}",
-            startDelay = waveNumber == 1 ? 1f : 2f
-        };
-
-        switch ((waveNumber - 1) % 4)
-        {
-            case 0:
-                wave.spawns.Add(new SpawnInstruction { type = EnemyType.Walker, amount = 5 + (tier * 3), interval = walkerInterval });
-                if (tier > 1) wave.spawns.Add(new SpawnInstruction { type = EnemyType.Dasher, amount = tier - 1, interval = specialInterval });
-                break;
-
-            case 1:
-                wave.spawns.Add(new SpawnInstruction { type = EnemyType.Walker, amount = 4 + (tier * 2), interval = walkerInterval });
-                wave.spawns.Add(new SpawnInstruction { type = EnemyType.Dasher, amount = 1 + tier, interval = specialInterval });
-                break;
-
-            case 2:
-                wave.spawns.Add(new SpawnInstruction { type = EnemyType.Walker, amount = 3 + (tier * 2), interval = walkerInterval });
-                if (bossPrefab != null) wave.spawns.Add(new SpawnInstruction { type = EnemyType.Boss, amount = tier, interval = 1.2f, prefabOverride = bossPrefab });
-                break;
-
-            default:
-                wave.spawns.Add(new SpawnInstruction { type = EnemyType.Walker, amount = 6 + tier, interval = walkerInterval });
-                wave.spawns.Add(new SpawnInstruction { type = EnemyType.Exploder, amount = tier, interval = specialInterval });
-                break;
-        }
-
-        // Add some variety based on wave number
-        if (waveNumber >= 3)
-        {
-            wave.spawns.Add(new SpawnInstruction { type = EnemyType.Spitter, amount = tier, interval = specialInterval });
-        }
-
-        return wave;
-    }
-
-    private GameObject ResolvePrefab(SpawnInstruction instruction)
-    {
-        if (instruction.prefabOverride != null) return instruction.prefabOverride;
-
-        switch (instruction.type)
-        {
-            case EnemyType.Dasher: return dasherPrefab != null ? dasherPrefab : enemyPrefab;
-            case EnemyType.Boss: return bossPrefab != null ? bossPrefab : enemyPrefab;
-            case EnemyType.Exploder: return exploderPrefab != null ? exploderPrefab : enemyPrefab;
-            case EnemyType.Spitter: return spitterPrefab != null ? spitterPrefab : enemyPrefab;
-            default: return enemyPrefab;
-        }
-    }
-
     private void ResolvePlayer()
     {
         if (player != null) return;
+
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-        if (playerObject != null) player = playerObject.transform;
+        if (playerObject != null)
+        {
+            player = playerObject.transform;
+        }
     }
 }
