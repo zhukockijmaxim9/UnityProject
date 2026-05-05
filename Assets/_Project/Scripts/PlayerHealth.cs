@@ -10,6 +10,11 @@ public class PlayerHealth : MonoBehaviour
     public bool IsDead => isDead;
     public bool IsInKnockback => knockbackCounter > 0;
 
+    [Header("Health Regen")]
+    [SerializeField] private float healthRegenPerSecond = 2f;
+    private bool healthRegenUnlocked;
+    private float healthRegenProgress;
+
     [Header("UI References")]
     public Slider healthSlider;
     [SerializeField] private GameObject damagePopupPrefab;
@@ -46,6 +51,8 @@ public class PlayerHealth : MonoBehaviour
         {
             knockbackCounter -= Time.deltaTime;
         }
+
+        RegenerateHealth();
     }
 
     public bool CanTakeDamage()
@@ -89,6 +96,16 @@ public class PlayerHealth : MonoBehaviour
         GameManager.ReportPlayerHealth(currentHealth, maxHealth);
     }
 
+    public void UnlockHealthRegen()
+    {
+        healthRegenUnlocked = true;
+    }
+
+    public void MultiplyHealthRegen(float multiplier)
+    {
+        healthRegenPerSecond = Mathf.Max(0.1f, healthRegenPerSecond * multiplier);
+    }
+
     public void IncreaseMaxHealth(int amount, bool heal)
     {
         maxHealth += amount;
@@ -116,6 +133,26 @@ public class PlayerHealth : MonoBehaviour
         if (healthSlider == null) return;
         healthSlider.maxValue = maxHealth;
         healthSlider.value = currentHealth;
+    }
+
+    private void RegenerateHealth()
+    {
+        if (!healthRegenUnlocked || isDead || currentHealth >= maxHealth)
+        {
+            return;
+        }
+
+        healthRegenProgress += healthRegenPerSecond * Time.deltaTime;
+        if (healthRegenProgress < 1f)
+        {
+            return;
+        }
+
+        int healAmount = Mathf.FloorToInt(healthRegenProgress);
+        healthRegenProgress -= healAmount;
+        currentHealth = Mathf.Min(maxHealth, currentHealth + healAmount);
+        UpdateHealthUi();
+        GameManager.ReportPlayerHealth(currentHealth, maxHealth);
     }
 
     private void SpawnDamagePopup(int amount)
