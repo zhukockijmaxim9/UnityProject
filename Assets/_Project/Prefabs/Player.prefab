@@ -45,6 +45,7 @@ GameObject:
   - component: {fileID: 5493082463448265150}
   - component: {fileID: 2170178347091418870}
   - component: {fileID: 8342446990713750417}
+  - component: {fileID: 4718704991122334455}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -252,9 +253,24 @@ MonoBehaviour:
   staminaRegenRate: 24
   staminaRegenDelay: 0.6
   staminaSlider: {fileID: 0}
-  bulletPrefab: {fileID: 3742799303467310150, guid: 88659e701c4132a48aa0f362661bd7ca, type: 3}
+--- !u!114 &4718704991122334455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4625718619702770580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f3e31f2a1d84b9190d9bdf5bdfbe111, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponController
   firePoint: {fileID: 4004385432317177369}
-  fireRate: 4
+  availableWeapons:
+  - {fileID: 11400000, guid: 0ee0f8792df7c0042a1f67d9a7b9b01c, type: 2}
+  - {fileID: 11400000, guid: 28914fa42ce8ed449bdaaea6b86597b3, type: 2}
+  - {fileID: 11400000, guid: a9e2182cba21f9d498742411372868b0, type: 2}
+  - {fileID: 11400000, guid: f7790ced311f4be48a9c4f4c9d202108, type: 2}
 --- !u!1 &6584145229982162935
 GameObject:
   m_ObjectHideFlags: 0

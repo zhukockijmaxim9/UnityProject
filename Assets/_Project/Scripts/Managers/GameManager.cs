@@ -1,8 +1,6 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
-using TMPro;
 
 public class GameManager : MonoBehaviour
 {
@@ -12,6 +10,12 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int defaultPointsPerKill = 100;
     [SerializeField] private float restartDelay = 2.5f;
 
+    [Header("XP System")]
+    public int currentLevel = 1;
+    public int currentXP = 0;
+    public int targetXP = 500;
+    public float xpMultiplier = 1.2f;
+
     private int currentWave;
     private int killCount;
     private int aliveEnemies;
@@ -19,18 +23,12 @@ public class GameManager : MonoBehaviour
     private int currentHealth;
     private int maxHealth;
     private int currentAmmo;
-    private int maxAmmo;
+    private int reserveAmmo;
     private bool waveActive;
     private bool isGameOver;
+    private bool isUpgradeMenuOpen;
     private Coroutine restartCoroutine;
-
-    private Canvas hudCanvas;
-    private TextMeshProUGUI healthText;
-    private TextMeshProUGUI ammoText;
-    private TextMeshProUGUI waveText;
-    private TextMeshProUGUI killsText;
-    private TextMeshProUGUI scoreText;
-    private TextMeshProUGUI statusText;
+    private GameHud hud;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -95,9 +93,9 @@ public class GameManager : MonoBehaviour
         EnsureInstance().HandlePlayerDeath();
     }
 
-    public static void ReportWeaponAmmo(int ammoInMagazine, int magazineSize)
+    public static void ReportWeaponAmmo(int ammoInMagazine, int weaponReserveAmmo)
     {
-        EnsureInstance().SetWeaponAmmo(ammoInMagazine, magazineSize);
+        EnsureInstance().SetWeaponAmmo(ammoInMagazine, weaponReserveAmmo);
     }
 
     public static void ReportWaveState(bool active)
@@ -112,7 +110,7 @@ public class GameManager : MonoBehaviour
 
     public static bool CanGameplayRun()
     {
-        return !EnsureInstance().isGameOver;
+        return !EnsureInstance().isGameOver && !EnsureInstance().isUpgradeMenuOpen;
     }
 
     public static int GetCurrentWaveNumber()
@@ -159,6 +157,15 @@ public class GameManager : MonoBehaviour
         killCount++;
         aliveEnemies = Mathf.Max(0, aliveEnemies - 1);
         score += pointsAwarded > 0 ? pointsAwarded : defaultPointsPerKill;
+
+        GainXP(pointsAwarded / 2);
+        RefreshHud();
+    }
+
+    public void CloseUpgradeMenu()
+    {
+        isUpgradeMenuOpen = false;
+        Time.timeScale = 1f;
         RefreshHud();
     }
 
@@ -188,10 +195,10 @@ public class GameManager : MonoBehaviour
         restartCoroutine = StartCoroutine(RestartCurrentSceneAfterDelay());
     }
 
-    public void SetWeaponAmmo(int ammoInMagazine, int magazineSize)
+    public void SetWeaponAmmo(int ammoInMagazine, int weaponReserveAmmo)
     {
         currentAmmo = Mathf.Max(0, ammoInMagazine);
-        maxAmmo = Mathf.Max(0, magazineSize);
+        reserveAmmo = weaponReserveAmmo;
         RefreshHud();
     }
 
@@ -210,7 +217,7 @@ public class GameManager : MonoBehaviour
         currentHealth = 0;
         maxHealth = 0;
         currentAmmo = 0;
-        maxAmmo = 0;
+        reserveAmmo = 0;
         waveActive = false;
         isGameOver = false;
 
@@ -223,6 +230,30 @@ public class GameManager : MonoBehaviour
         RefreshHud();
     }
 
+    private void GainXP(int amount)
+    {
+        currentXP += amount;
+        if (currentXP >= targetXP)
+        {
+            LevelUp();
+        }
+    }
+
+    private void LevelUp()
+    {
+        currentXP -= targetXP;
+        currentLevel++;
+        targetXP = Mathf.RoundToInt(targetXP * xpMultiplier);
+
+        isUpgradeMenuOpen = true;
+        Time.timeScale = 0f;
+
+        if (UpgradeManager.Instance != null)
+        {
+            UpgradeManager.Instance.OpenUpgradeMenu();
+        }
+    }
+
     private void HandleSceneLoaded(Scene scene, LoadSceneMode loadMode)
     {
         EnsureHudExists();
@@ -231,78 +262,22 @@ public class GameManager : MonoBehaviour
 
     private void EnsureHudExists()
     {
-        if (hudCanvas != null && healthText != null && ammoText != null && waveText != null && killsText != null && scoreText != null && statusText != null)
+        if (hud == null)
         {
-            return;
+            hud = GetComponent<GameHud>();
+            if (hud == null)
+            {
+                hud = gameObject.AddComponent<GameHud>();
+            }
         }
 
-        GameObject canvasObject = new GameObject("HUDCanvas_Auto");
-        canvasObject.transform.SetParent(transform, false);
-
-        hudCanvas = canvasObject.AddComponent<Canvas>();
-        hudCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        hudCanvas.sortingOrder = 100;
-
-        CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-        scaler.matchWidthOrHeight = 0.5f;
-
-        canvasObject.AddComponent<GraphicRaycaster>();
-
-        // Создаем текстовые поля с небольшим отступом от края
-        float rightPadding = -40f;
-        healthText = CreateHudText("HealthText", new Vector2(rightPadding, -40f));
-        ammoText = CreateHudText("AmmoText", new Vector2(rightPadding, -80f));
-        waveText = CreateHudText("WaveText", new Vector2(rightPadding, -120f));
-        killsText = CreateHudText("KillsText", new Vector2(rightPadding, -160f));
-        scoreText = CreateHudText("ScoreText", new Vector2(rightPadding, -200f));
-        statusText = CreateHudText("StatusText", new Vector2(rightPadding, -240f));
-    }
-
-    private TextMeshProUGUI CreateHudText(string objectName, Vector2 anchoredPosition)
-    {
-        GameObject textObject = new GameObject(objectName);
-        textObject.transform.SetParent(hudCanvas.transform, false);
-
-        TextMeshProUGUI textComponent = textObject.AddComponent<TextMeshProUGUI>();
-        textComponent.fontSize = 32;
-        textComponent.fontWeight = FontWeight.Bold;
-        textComponent.color = Color.white;
-        textComponent.alignment = TextAlignmentOptions.Right;
-        
-        // Добавляем тень/обводку через настройки TMP
-        textComponent.outlineWidth = 0.2f;
-        textComponent.outlineColor = Color.black;
-
-        RectTransform rectTransform = textObject.GetComponent<RectTransform>();
-        rectTransform.anchorMin = new Vector2(1f, 1f);
-        rectTransform.anchorMax = new Vector2(1f, 1f);
-        rectTransform.pivot = new Vector2(1f, 1f);
-        rectTransform.anchoredPosition = anchoredPosition;
-        rectTransform.sizeDelta = new Vector2(500f, 50f);
-
-        return textComponent;
+        hud.EnsureCreated();
     }
 
     private void RefreshHud()
     {
-        if (healthText == null || ammoText == null || waveText == null || killsText == null || scoreText == null || statusText == null)
-        {
-            return;
-        }
-
-        healthText.text = maxHealth > 0 ? $"HP: {currentHealth}/{maxHealth}" : "HP: --";
-        ammoText.text = maxAmmo > 0 ? $"Ammo: {currentAmmo}/{maxAmmo}" : "Ammo: --";
-        waveText.text = $"Wave: {Mathf.Max(1, currentWave)}";
-        killsText.text = $"Kills: {killCount}";
-        scoreText.text = $"Score: {score:0000}";
-        statusText.text = isGameOver ? "Status: Game Over" : waveActive ? "Status: Wave Active" : "Status: Between Waves";
-        statusText.color = isGameOver
-            ? new Color(1f, 0.45f, 0.45f)
-            : waveActive
-                ? new Color(0.55f, 1f, 0.55f)
-                : new Color(1f, 0.9f, 0.45f);
+        EnsureHudExists();
+        hud.Refresh(currentHealth, maxHealth, currentAmmo, reserveAmmo, currentWave, killCount, score, currentLevel, currentXP, targetXP);
     }
 
     private IEnumerator RestartCurrentSceneAfterDelay()

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
   weaponName: Uzi
   bulletPrefab: {fileID: 3742799303467310150, guid: 88659e701c4132a48aa0f362661bd7ca, type: 3}
+  ammoType: 1
   damage: 15
   fireRate: 12
   projectileSpeed: 18

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
   weaponName: Shotgan
   bulletPrefab: {fileID: 3742799303467310150, guid: 88659e701c4132a48aa0f362661bd7ca, type: 3}
+  ammoType: 2
   damage: 18
   fireRate: 1.5
   projectileSpeed: 15
