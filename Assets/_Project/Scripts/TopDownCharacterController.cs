@@ -103,10 +103,10 @@ public class TopDownCharacterController : MonoBehaviour
 
     private void Update()
     {
-        if (mainCamera == null)
-        {
-            mainCamera = Camera.main;
-        }
+        // ЕСЛИ ПАУЗА — ВЫХОДИМ ИЗ МЕТОДА СРАЗУ, ПЕРСОНАЖ СПИТ
+        if (PauseMenu.isPaused) return; 
+
+        if (mainCamera == null) mainCamera = Camera.main;
 
         if (mainCamera != null && Mouse.current != null)
         {
@@ -152,6 +152,14 @@ public class TopDownCharacterController : MonoBehaviour
         if (lookDirection.sqrMagnitude > 0.001f)
         {
             RotateTowards(lookDirection.normalized);
+        }
+
+        if (PauseMenu.isPaused) return;
+
+        if (!CanAct())
+        {
+            rb.linearVelocity = Vector2.zero;
+            return;
         }
     }
 
