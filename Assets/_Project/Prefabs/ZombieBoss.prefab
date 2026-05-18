@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7555251580366276561}
   - component: {fileID: 95331842295891}
   - component: {fileID: 2580689932979743186}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: ZombieBoss
   m_TagString: Enemy
   m_Icon: {fileID: 0}
