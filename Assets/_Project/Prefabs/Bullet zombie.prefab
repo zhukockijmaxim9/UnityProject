@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4093113508453824900}
   - component: {fileID: 6504228132493379768}
   - component: {fileID: -5001960659593765511}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Bullet zombie
   m_TagString: Bullet
   m_Icon: {fileID: 0}
