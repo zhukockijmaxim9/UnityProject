@@ -64,10 +64,10 @@ public class TopDownCharacterController : MonoBehaviour
 
     private void Update()
     {
-        if (mainCamera == null)
-        {
-            mainCamera = Camera.main;
-        }
+        // ЕСЛИ ПАУЗА — ВЫХОДИМ ИЗ МЕТОДА СРАЗУ, ПЕРСОНАЖ СПИТ
+        if (PauseMenu.isPaused) return; 
+
+        if (mainCamera == null) mainCamera = Camera.main;
 
         if (mainCamera != null && Mouse.current != null)
         {
@@ -109,6 +109,14 @@ public class TopDownCharacterController : MonoBehaviour
         // A/D (moveInput.x) moves left/right along transform.up (A moves left / +transform.up, D moves right / -transform.up)
         Vector2 moveDirection = (transform.right * moveInput.y) - (transform.up * moveInput.x);
         rb.linearVelocity = moveDirection * moveSpeed;
+
+        if (PauseMenu.isPaused) return;
+
+        if (!CanAct())
+        {
+            rb.linearVelocity = Vector2.zero;
+            return;
+        }
     }
 
     private bool CanAct()
