@@ -97,13 +97,18 @@ public class TopDownCharacterController : MonoBehaviour
             return;
         }
 
-        rb.linearVelocity = moveInput * moveSpeed;
-
+        // Rotate towards mouse position first, so the facing direction (transform.right) is updated for this frame
         Vector2 lookDirection = mousePos - rb.position;
         if (lookDirection.sqrMagnitude > 0.001f)
         {
             RotateTowards(lookDirection.normalized);
         }
+
+        // Calculate movement relative to looking direction:
+        // W/S (moveInput.y) moves forward/backward along transform.right
+        // A/D (moveInput.x) moves left/right along transform.up (A moves left / +transform.up, D moves right / -transform.up)
+        Vector2 moveDirection = (transform.right * moveInput.y) - (transform.up * moveInput.x);
+        rb.linearVelocity = moveDirection * moveSpeed;
     }
 
     private bool CanAct()
@@ -118,7 +123,8 @@ public class TopDownCharacterController : MonoBehaviour
             return;
         }
 
-        Vector2 desiredDashDirection = moveInput.sqrMagnitude > 0.01f ? moveInput.normalized : transform.right;
+        Vector2 moveDirection = (transform.right * moveInput.y) - (transform.up * moveInput.x);
+        Vector2 desiredDashDirection = moveDirection.sqrMagnitude > 0.01f ? moveDirection.normalized : transform.right;
         if (desiredDashDirection.sqrMagnitude <= 0.001f)
         {
             desiredDashDirection = Vector2.right;

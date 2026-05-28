@@ -220,6 +220,11 @@ public class GameManager : MonoBehaviour
         reserveAmmo = 0;
         waveActive = false;
         isGameOver = false;
+        
+        // Reset player level and XP progression
+        currentLevel = 1;
+        currentXP = 0;
+        targetXP = 500;
 
         if (restartCoroutine != null)
         {
