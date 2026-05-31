@@ -12,6 +12,7 @@ public class WeaponDefinition : ScriptableObject
 
     [Header("Identity")]
     public string weaponName = "Weapon";
+    public Sprite icon;
 
     [Header("Projectile")]
     public GameObject bulletPrefab;

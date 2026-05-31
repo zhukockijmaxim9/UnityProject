@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f250ce1b6dc4b90a0f6ba69d789c222, type: 3}
   m_Name: Pistol
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
-  weaponName: Weapon
+  weaponName: Pistol
+  icon: {fileID: 8510352229001544910, guid: fdf7caeadcfa3c14c81344533744a832, type: 3}
   bulletPrefab: {fileID: 3742799303467310150, guid: 88659e701c4132a48aa0f362661bd7ca, type: 3}
   ammoType: 0
   damage: 25

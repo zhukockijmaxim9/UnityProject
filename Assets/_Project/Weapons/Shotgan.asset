@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Shotgan
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
   weaponName: Shotgan
+  icon: {fileID: 8510352229001544910, guid: fdf7caeadcfa3c14c81344533744a832, type: 3}
   bulletPrefab: {fileID: 3742799303467310150, guid: 88659e701c4132a48aa0f362661bd7ca, type: 3}
   ammoType: 2
   damage: 18

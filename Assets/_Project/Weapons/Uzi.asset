@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Uzi
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
   weaponName: Uzi
+  icon: {fileID: -778044537197861050, guid: b48cf871df0f7ad488ef7ecd7f962f00, type: 3}
   bulletPrefab: {fileID: 3742799303467310150, guid: 88659e701c4132a48aa0f362661bd7ca, type: 3}
   ammoType: 1
   damage: 15

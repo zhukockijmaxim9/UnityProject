@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -6,9 +5,11 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
+    private const string GameplaySceneName = "SampleScene";
+    private const string MainMenuSceneName = "MainMenuScene";
+
     [Header("Scoring")]
     [SerializeField] private int defaultPointsPerKill = 100;
-    [SerializeField] private float restartDelay = 2.5f;
 
     [Header("XP System")]
     public int currentLevel = 1;
@@ -24,11 +25,14 @@ public class GameManager : MonoBehaviour
     private int maxHealth;
     private int currentAmmo;
     private int reserveAmmo;
+    private WeaponController weaponController;
     private bool waveActive;
     private bool isGameOver;
     private bool isUpgradeMenuOpen;
-    private Coroutine restartCoroutine;
     private GameHud hud;
+    private DeathScreen deathScreen;
+
+    public static bool IsGameOver => Instance != null && Instance.isGameOver;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -98,6 +102,11 @@ public class GameManager : MonoBehaviour
         EnsureInstance().SetWeaponAmmo(ammoInMagazine, weaponReserveAmmo);
     }
 
+    public static void ReportWeaponLoadout(WeaponController controller)
+    {
+        EnsureInstance().SetWeaponLoadout(controller);
+    }
+
     public static void ReportWaveState(bool active)
     {
         EnsureInstance().SetWaveState(active);
@@ -131,8 +140,10 @@ public class GameManager : MonoBehaviour
 
         SceneManager.sceneLoaded += HandleSceneLoaded;
 
-        EnsureHudExists();
-        RefreshHud();
+        if (SceneManager.GetActiveScene().isLoaded)
+        {
+            UpdateHudForActiveScene(SceneManager.GetActiveScene());
+        }
     }
 
     private void OnDestroy()
@@ -185,20 +196,46 @@ public class GameManager : MonoBehaviour
 
         isGameOver = true;
         waveActive = false;
-        RefreshHud();
 
-        if (restartCoroutine != null)
+        if (PauseMenu.isPaused)
         {
-            StopCoroutine(restartCoroutine);
+            ClosePauseMenuIfOpen();
         }
 
-        restartCoroutine = StartCoroutine(RestartCurrentSceneAfterDelay());
+        Time.timeScale = 0f;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        EnsureDeathScreenExists();
+        deathScreen.Show(currentWave, killCount, score, currentLevel);
+    }
+
+    public void RestartAfterDeath()
+    {
+        Time.timeScale = 1f;
+        HideDeathScreen();
+        isGameOver = false;
+        SceneManager.LoadScene(GameplaySceneName);
+    }
+
+    public void LoadMainMenuAfterDeath()
+    {
+        Time.timeScale = 1f;
+        HideDeathScreen();
+        isGameOver = false;
+        SceneManager.LoadScene(MainMenuSceneName);
     }
 
     public void SetWeaponAmmo(int ammoInMagazine, int weaponReserveAmmo)
     {
         currentAmmo = Mathf.Max(0, ammoInMagazine);
         reserveAmmo = weaponReserveAmmo;
+        RefreshHud();
+    }
+
+    public void SetWeaponLoadout(WeaponController controller)
+    {
+        weaponController = controller;
         RefreshHud();
     }
 
@@ -218,15 +255,11 @@ public class GameManager : MonoBehaviour
         maxHealth = 0;
         currentAmmo = 0;
         reserveAmmo = 0;
+        weaponController = null;
         waveActive = false;
         isGameOver = false;
 
-        if (restartCoroutine != null)
-        {
-            StopCoroutine(restartCoroutine);
-            restartCoroutine = null;
-        }
-
+        HideDeathScreen();
         RefreshHud();
     }
 
@@ -256,8 +289,70 @@ public class GameManager : MonoBehaviour
 
     private void HandleSceneLoaded(Scene scene, LoadSceneMode loadMode)
     {
+        UpdateHudForActiveScene(scene);
+    }
+
+    private bool IsGameplayScene(Scene scene)
+    {
+        return scene.name == GameplaySceneName;
+    }
+
+    private void UpdateHudForActiveScene(Scene activeScene)
+    {
+        bool isGameplay = IsGameplayScene(activeScene);
+
         EnsureHudExists();
-        RefreshHud();
+        hud.SetVisible(isGameplay);
+        HideDeathScreen();
+
+        if (!isGameplay)
+        {
+            isUpgradeMenuOpen = false;
+            isGameOver = false;
+            Time.timeScale = 1f;
+            return;
+        }
+
+        ResetRun();
+    }
+
+    private void EnsureDeathScreenExists()
+    {
+        if (deathScreen != null)
+        {
+            return;
+        }
+
+        deathScreen = GetComponent<DeathScreen>();
+        if (deathScreen == null)
+        {
+            deathScreen = gameObject.AddComponent<DeathScreen>();
+        }
+
+        deathScreen.RestartRequested += RestartAfterDeath;
+        deathScreen.MainMenuRequested += LoadMainMenuAfterDeath;
+        deathScreen.EnsureCreated();
+    }
+
+    private void HideDeathScreen()
+    {
+        if (deathScreen != null)
+        {
+            deathScreen.Hide();
+        }
+    }
+
+    private void ClosePauseMenuIfOpen()
+    {
+#if UNITY_2023_1_OR_NEWER
+        PauseMenu pauseMenu = FindAnyObjectByType<PauseMenu>();
+#else
+        PauseMenu pauseMenu = FindObjectOfType<PauseMenu>();
+#endif
+        if (pauseMenu != null)
+        {
+            pauseMenu.ForceClose();
+        }
     }
 
     private void EnsureHudExists()
@@ -276,13 +371,13 @@ public class GameManager : MonoBehaviour
 
     private void RefreshHud()
     {
+        if (!IsGameplayScene(SceneManager.GetActiveScene()))
+        {
+            return;
+        }
+
         EnsureHudExists();
         hud.Refresh(currentHealth, maxHealth, currentAmmo, reserveAmmo, currentWave, killCount, score, currentLevel, currentXP, targetXP);
-    }
-
-    private IEnumerator RestartCurrentSceneAfterDelay()
-    {
-        yield return new WaitForSeconds(restartDelay);
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        hud.RefreshWeaponBar(weaponController);
     }
 }

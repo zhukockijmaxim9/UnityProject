@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: AssaultRifle
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
   weaponName: AK-47
+  icon: {fileID: -4775163940302797764, guid: 22e346c24d101c94c9920425b3172255, type: 3}
   bulletPrefab: {fileID: 3742799303467310150, guid: 88659e701c4132a48aa0f362661bd7ca, type: 3}
   ammoType: 1
   damage: 25

@@ -37,6 +37,8 @@ public class WeaponController : MonoBehaviour
     private float reloadTimeMultiplier = 1f;
 
     public string CurrentWeaponName => currentDefinition != null ? currentDefinition.weaponName : "";
+    public int CurrentWeaponIndex => currentWeaponIndex;
+    public int WeaponCount => availableWeapons != null ? availableWeapons.Length : 0;
     public int CurrentAmmo => currentAmmo;
     public int CurrentMagazineSize => currentMagazineSize;
     public bool IsReloading => isReloading;
@@ -60,6 +62,11 @@ public class WeaponController : MonoBehaviour
 
     private void Update()
     {
+        if (PauseMenu.isPaused)
+        {
+            return;
+        }
+
         HandleKeyboardInput();
         HandleShootingInput();
         UpdateReload();
@@ -201,6 +208,7 @@ public class WeaponController : MonoBehaviour
                 AddAmmo(availableWeapons[i].ammoType, GetMagazineSize(availableWeapons[i]));
                 EquipWeapon(i);
                 Debug.Log("Unlocked and equipped: " + availableWeapons[i].weaponName);
+                ReportLoadout();
                 return;
             }
         }
@@ -209,6 +217,16 @@ public class WeaponController : MonoBehaviour
     public bool IsWeaponUnlocked(int index)
     {
         return unlockedWeapons != null && index >= 0 && index < unlockedWeapons.Length && unlockedWeapons[index];
+    }
+
+    public WeaponDefinition GetWeaponDefinition(int index)
+    {
+        if (availableWeapons == null || index < 0 || index >= availableWeapons.Length)
+        {
+            return null;
+        }
+
+        return availableWeapons[index];
     }
 
     public bool IsAmmoTypeUnlocked(WeaponDefinition.AmmoType ammoType)
@@ -287,6 +305,7 @@ public class WeaponController : MonoBehaviour
         currentAmmo = Mathf.Clamp(ammoInMagazines[weaponIndex], 0, currentMagazineSize);
         isReloading = false;
         ReportAmmo();
+        ReportLoadout();
     }
 
     private bool EnsureReadyToShoot()
@@ -421,5 +440,10 @@ public class WeaponController : MonoBehaviour
     {
         int reserveAmmo = currentDefinition != null ? GetReserveAmmo(currentDefinition.ammoType) : 0;
         GameManager.ReportWeaponAmmo(currentAmmo, reserveAmmo);
+    }
+
+    private void ReportLoadout()
+    {
+        GameManager.ReportWeaponLoadout(this);
     }
 }

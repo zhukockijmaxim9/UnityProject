@@ -46,6 +46,12 @@ public class TopDownCharacterController : MonoBehaviour
 
     public void OnMove(InputValue value)
     {
+        if (PauseMenu.isPaused)
+        {
+            moveInput = Vector2.zero;
+            return;
+        }
+
         moveInput = value.Get<Vector2>();
     }
 
@@ -79,6 +85,12 @@ public class TopDownCharacterController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (PauseMenu.isPaused)
+        {
+            rb.linearVelocity = Vector2.zero;
+            return;
+        }
+
         if (!CanAct())
         {
             rb.linearVelocity = Vector2.zero;
@@ -103,14 +115,6 @@ public class TopDownCharacterController : MonoBehaviour
         if (lookDirection.sqrMagnitude > 0.001f)
         {
             RotateTowards(lookDirection.normalized);
-        }
-
-        if (PauseMenu.isPaused) return;
-
-        if (!CanAct())
-        {
-            rb.linearVelocity = Vector2.zero;
-            return;
         }
     }
 
