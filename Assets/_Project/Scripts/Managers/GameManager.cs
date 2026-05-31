@@ -258,6 +258,11 @@ public class GameManager : MonoBehaviour
         weaponController = null;
         waveActive = false;
         isGameOver = false;
+        
+        // Reset player level and XP progression
+        currentLevel = 1;
+        currentXP = 0;
+        targetXP = 500;
 
         HideDeathScreen();
         RefreshHud();

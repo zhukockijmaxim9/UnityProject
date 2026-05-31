@@ -90,11 +90,12 @@ public class PlayerHealth : MonoBehaviour
         rb.linearVelocity = direction;
     }
 
-    public void Heal(int amount)
+    public bool Heal(int amount)
     {
-        if (isDead) return;
+        if (isDead || currentHealth >= maxHealth) return false;
         currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
         UpdateHealth();
+        return true;
     }
 
     public void UnlockHealthRegen()

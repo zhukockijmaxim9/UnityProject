@@ -17,7 +17,9 @@ public class HealthPickup : MonoBehaviour
             return;
         }
 
-        playerHealth.Heal(healAmount);
-        Destroy(gameObject);
+        if (playerHealth.Heal(healAmount))
+        {
+            Destroy(gameObject);
+        }
     }
 }

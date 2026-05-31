@@ -86,7 +86,7 @@ public class BossEnemy : EnemyAI
             EnemyAI summonedAI = summoned.GetComponent<EnemyAI>();
             if (summonedAI != null)
             {
-                summonedAI.ConfigureForWave(GameManager.Instance != null ? GameManager.Instance.currentLevel : 1);
+                summonedAI.ConfigureForWave(EnemySpawner.Instance != null ? EnemySpawner.Instance.currentWave : 1);
             }
         }
         
